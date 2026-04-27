@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "210018805867",
+    "project_id": "vitaai-6edf1",
+    "storage_bucket": "vitaai-6edf1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:210018805867:android:cfd2e813818619af8ee92e",
+        "android_client_info": {
+          "package_name": "com.vitaai.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "210018805867-2nds8gjit9ksi5i9vhs41pskfu6t4dek.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vitaai.app",
+            "certificate_hash": "2458d0cc5389cc390b594d086b13c35b2898cf94"
+          }
+        },
+        {
+          "client_id": "210018805867-64hejti4qh5pggqtnjjh8elqbggc8sj0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClR0eRZSVaenr-PqrVdko2FNKf-xdNrgM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "210018805867-64hejti4qh5pggqtnjjh8elqbggc8sj0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
