@@ -10,20 +10,22 @@ object XPManager {
 
     data class LevelInfo(
         val level: Int,
-        val title: String,
+        val titleKey: String,
         val emoji: String,
         val currentXP: Int,
         val xpForNext: Int,
         val progress: Float
-    )
+    ) {
+        val title: String get() = LanguageManager.t(titleKey)
+    }
 
     fun getLevelInfo(xp: Int): LevelInfo {
         return when {
-            xp >= 1000 -> LevelInfo(5, "Maestro", "👑", xp, 1000, 1f)
-            xp >= 600 -> LevelInfo(4, "Experto", "⭐", xp, 1000, (xp - 600) / 400f)
-            xp >= 300 -> LevelInfo(3, "Atleta", "💪", xp, 600, (xp - 300) / 300f)
-            xp >= 100 -> LevelInfo(2, "Aprendiz", "🌿", xp, 300, (xp - 100) / 200f)
-            else -> LevelInfo(1, "Principiante", "🌱", xp, 100, xp / 100f)
+            xp >= 1000 -> LevelInfo(5, "level_master", "👑", xp, 1000, 1f)
+            xp >= 600 -> LevelInfo(4, "level_expert", "⭐", xp, 1000, (xp - 600) / 400f)
+            xp >= 300 -> LevelInfo(3, "level_athlete", "💪", xp, 600, (xp - 300) / 300f)
+            xp >= 100 -> LevelInfo(2, "level_apprentice", "🌿", xp, 300, (xp - 100) / 200f)
+            else -> LevelInfo(1, "level_beginner", "🌱", xp, 100, xp / 100f)
         }
     }
 

@@ -19,13 +19,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.XPManager
-import kotlinx.coroutines.Dispatchers
+import com.vitaai.app.utils.callOpenAIWithHistory
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
 data class ChatMessage(
     val content: String,
@@ -138,10 +133,13 @@ fun ChatScreen(modifier: Modifier = Modifier) {
                                 - Be concise but useful, max 4 sentences
                                 - Use emojis occasionally
                             """.trimIndent()
-                            val response = callOpenAIWithHistory(systemContext, messages)
+                            val history = messages.map { msg ->
+                                Pair(if (msg.isUser) "user" else "assistant", msg.content)
+                            }
+                            val response = callOpenAIWithHistory(systemContext, history)
                             messages = messages + ChatMessage(response, false)
                         } catch (e: Exception) {
-                            messages = messages + ChatMessage("Error 🙏", false)
+                            messages = messages + ChatMessage(LanguageManager.t("chat_error"), false)
                         }
                         isLoading = false
                     }
@@ -199,35 +197,3 @@ fun ChatBubble(msg: ChatMessage) {
     }
 }
 
-suspend fun callOpenAIWithHistory(systemPrompt: String, history: List<ChatMessage>): String =
-    withContext(Dispatchers.IO) {
-        val apiKey = "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"
-        val url = URL("https://api.openai.com/v1/chat/completions")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.setRequestProperty("Content-Type", "application/json")
-        connection.setRequestProperty("Authorization", "Bearer $apiKey")
-        connection.doOutput = true
-
-        val messagesArray = JSONArray().apply {
-            put(JSONObject().apply { put("role", "system"); put("content", systemPrompt) })
-            history.forEach { msg ->
-                put(JSONObject().apply {
-                    put("role", if (msg.isUser) "user" else "assistant")
-                    put("content", msg.content)
-                })
-            }
-        }
-
-        val body = JSONObject().apply {
-            put("model", "gpt-4o-mini")
-            put("messages", messagesArray)
-            put("max_tokens", 500)
-            put("temperature", 0.7)
-        }.toString()
-
-        connection.outputStream.write(body.toByteArray())
-        val response = connection.inputStream.bufferedReader().readText()
-        JSONObject(response).getJSONArray("choices")
-            .getJSONObject(0).getJSONObject("message").getString("content")
-    }

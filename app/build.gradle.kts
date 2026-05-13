@@ -78,4 +78,10 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // WorkManager para notificaciones programadas
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // Coroutines + Firebase Task.await()
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }

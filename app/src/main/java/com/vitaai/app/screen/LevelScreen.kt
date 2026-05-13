@@ -21,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
+import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.XPManager
 
 @Composable
@@ -42,11 +43,11 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     val levelInfo = XPManager.getLevelInfo(xp)
 
     val levels = listOf(
-        Triple(1, "🌱", "Principiante"),
-        Triple(2, "🌿", "Aprendiz"),
-        Triple(3, "💪", "Atleta"),
-        Triple(4, "⭐", "Experto"),
-        Triple(5, "👑", "Maestro")
+        Triple(1, "🌱", "level_beginner"),
+        Triple(2, "🌿", "level_apprentice"),
+        Triple(3, "💪", "level_athlete"),
+        Triple(4, "⭐", "level_expert"),
+        Triple(5, "👑", "level_master")
     )
 
     val xpThresholds = listOf(0, 100, 300, 600, 1000)
@@ -74,7 +75,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(8.dp))
                 Text(levelInfo.title, fontSize = 28.sp,
                     fontWeight = FontWeight.Bold, color = Gold)
-                Text("Nivel ${levelInfo.level}", fontSize = 16.sp,
+                Text("${LanguageManager.t("level")} ${levelInfo.level}", fontSize = 16.sp,
                     color = Color.White.copy(alpha = 0.7f))
                 Spacer(Modifier.height(16.dp))
 
@@ -84,8 +85,12 @@ fun LevelScreen(modifier: Modifier = Modifier) {
 
                 if (levelInfo.level < 5) {
                     Spacer(Modifier.height(12.dp))
-                    Text("Faltan ${levelInfo.xpForNext - levelInfo.currentXP} XP para el siguiente nivel",
-                        fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f))
+                    Text(
+                        LanguageManager.t("xp_to_next").replace(
+                            "{xp}", (levelInfo.xpForNext - levelInfo.currentXP).toString()
+                        ),
+                        fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f)
+                    )
                     Spacer(Modifier.height(8.dp))
 
                     // Barra de progreso
@@ -106,7 +111,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     }
                 } else {
                     Spacer(Modifier.height(8.dp))
-                    Text("¡Nivel máximo alcanzado! 🎉",
+                    Text(LanguageManager.t("max_level_reached"),
                         fontSize = 14.sp, color = Gold,
                         fontWeight = FontWeight.SemiBold)
                 }
@@ -116,17 +121,17 @@ fun LevelScreen(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(24.dp))
 
         // Cómo ganar XP
-        Text("💡 Cómo ganar XP", fontSize = 18.sp,
+        Text("💡 ${LanguageManager.t("how_to_earn_xp")}", fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.height(12.dp))
 
         val xpActions = listOf(
-            Triple("📊", "Registrar progreso diario", "+${XPManager.XP_DAILY_LOG} XP"),
-            Triple("🤖", "Generar plan con IA", "+${XPManager.XP_GENERATE_PLAN} XP"),
-            Triple("📸", "Identificar alimento", "+${XPManager.XP_FOOD_SCAN} XP"),
-            Triple("💬", "Chatear con nutricionista", "+${XPManager.XP_CHAT_MESSAGE} XP"),
-            Triple("😊", "Registrar estado de ánimo", "+${XPManager.XP_MOOD_CHECK} XP")
+            Triple("📊", LanguageManager.t("xp_action_progress"), "+${XPManager.XP_DAILY_LOG} XP"),
+            Triple("🤖", LanguageManager.t("xp_action_plan"), "+${XPManager.XP_GENERATE_PLAN} XP"),
+            Triple("📸", LanguageManager.t("xp_action_food"), "+${XPManager.XP_FOOD_SCAN} XP"),
+            Triple("💬", LanguageManager.t("xp_action_chat"), "+${XPManager.XP_CHAT_MESSAGE} XP"),
+            Triple("😊", LanguageManager.t("xp_action_mood"), "+${XPManager.XP_MOOD_CHECK} XP")
         )
 
         xpActions.forEach { (emoji, action, xpGain) ->
@@ -151,12 +156,12 @@ fun LevelScreen(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(24.dp))
 
         // Todos los niveles
-        Text("🏆 Todos los niveles", fontSize = 18.sp,
+        Text("🏆 ${LanguageManager.t("all_levels")}", fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.height(12.dp))
 
-        levels.forEach { (level, emoji, title) ->
+        levels.forEach { (level, emoji, titleKey) ->
             val isUnlocked = levelInfo.level >= level
             val isCurrent = levelInfo.level == level
             val xpNeeded = xpThresholds[level - 1]
@@ -180,13 +185,13 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            title,
+                            LanguageManager.t(titleKey),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isCurrent) Gold else MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            if (level == 1) "Desde 0 XP" else "Desde $xpNeeded XP",
+                            LanguageManager.t("from_xp").replace("{xp}", xpNeeded.toString()),
                             fontSize = 12.sp,
                             color = if (isCurrent) Color.White.copy(alpha = 0.6f)
                             else MaterialTheme.colorScheme.outline
@@ -199,7 +204,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                                 .background(Gold)
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
-                            Text("ACTUAL", fontSize = 10.sp,
+                            Text(LanguageManager.t("current"), fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold, color = DeepBlue)
                         }
                     }

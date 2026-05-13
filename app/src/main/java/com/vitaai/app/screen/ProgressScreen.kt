@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -19,6 +21,7 @@ import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.XPManager
 import java.text.SimpleDateFormat
 import java.util.*
@@ -59,26 +62,30 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
             .padding(24.dp)
     ) {
         Spacer(Modifier.height(16.dp))
-        Text("📊 Mi Progreso", fontSize = 26.sp, fontWeight = FontWeight.Bold,
+        Text("📊 ${LanguageManager.t("my_progress")}", fontSize = 26.sp, fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.height(24.dp))
 
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Registro de hoy", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(LanguageManager.t("today_log"), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
-                        value = weightInput, onValueChange = { weightInput = it },
-                        label = { Text("Peso (kg)") },
+                        value = weightInput,
+                        onValueChange = { new -> if (new.matches(Regex("^\\d{0,3}([.,]\\d{0,2})?$"))) weightInput = new.replace(',', '.') },
+                        label = { Text(LanguageManager.t("weight")) },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp), singleLine = true
+                        shape = RoundedCornerShape(12.dp), singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
                     OutlinedTextField(
-                        value = caloriesInput, onValueChange = { caloriesInput = it },
-                        label = { Text("Calorías") },
+                        value = caloriesInput,
+                        onValueChange = { new -> if (new.all { it.isDigit() } && new.length <= 5) caloriesInput = new },
+                        label = { Text(LanguageManager.t("calories")) },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp), singleLine = true
+                        shape = RoundedCornerShape(12.dp), singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
                 Spacer(Modifier.height(12.dp))
@@ -102,9 +109,9 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
                                     dailyLimit = 1
                                 ) { added ->
                                     savedMsg = if (added > 0)
-                                        "✅ Guardado · +${added} XP 🏆"
+                                        "✅ ${LanguageManager.t("saved")} · +${added} XP 🏆"
                                     else
-                                        "✅ Guardado (XP ya reclamado hoy)"
+                                        "✅ ${LanguageManager.t("saved")} (${LanguageManager.t("xp_already_claimed_today")})"
                                 }
                                 weightInput = ""
                                 caloriesInput = ""
@@ -114,7 +121,7 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
                     shape = RoundedCornerShape(12.dp),
                     enabled = !isSaving && weightInput.isNotEmpty()
                 ) {
-                    Text(if (isSaving) "Guardando..." else "Guardar hoy")
+                    Text(if (isSaving) LanguageManager.t("saving") else LanguageManager.t("save_today"))
                 }
                 if (savedMsg.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
@@ -126,7 +133,7 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(24.dp))
 
         if (entries.isNotEmpty()) {
-            Text("⚖️ Evolución del peso", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text("⚖️ ${LanguageManager.t("weight_evolution")}", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(8.dp))
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                 AndroidView(
@@ -150,7 +157,8 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
                     },
                     update = { chart ->
                         val dataset = LineDataSet(
-                            entries.mapIndexed { i, e -> Entry(i.toFloat(), e.weight.toFloat()) }, "Peso"
+                            entries.mapIndexed { i, e -> Entry(i.toFloat(), e.weight.toFloat()) },
+                            LanguageManager.t("weight_short")
                         ).apply {
                             color = Color.rgb(26, 58, 92)
                             setCircleColor(Color.rgb(212, 168, 67))
@@ -168,7 +176,7 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
 
             Spacer(Modifier.height(16.dp))
 
-            Text("🔥 Calorías diarias", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text("🔥 ${LanguageManager.t("daily_calories")}", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(8.dp))
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                 AndroidView(
@@ -190,7 +198,8 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
                     },
                     update = { chart ->
                         val dataset = LineDataSet(
-                            entries.mapIndexed { i, e -> Entry(i.toFloat(), e.calories.toFloat()) }, "Calorías"
+                            entries.mapIndexed { i, e -> Entry(i.toFloat(), e.calories.toFloat()) },
+                            LanguageManager.t("calories")
                         ).apply {
                             color = Color.rgb(212, 168, 67)
                             setCircleColor(Color.rgb(212, 168, 67))
@@ -208,7 +217,7 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
         } else {
             Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
                 contentAlignment = Alignment.Center) {
-                Text("Aún no hay datos.\n¡Registra tu primer día! 💪",
+                Text(LanguageManager.t("no_data_yet"),
                     color = MaterialTheme.colorScheme.outline, fontSize = 14.sp)
             }
         }

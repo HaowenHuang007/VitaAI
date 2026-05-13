@@ -5,10 +5,12 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.vitaai.app.utils.ThemeManager
 
 // === 深蓝+金色 配色 ===
 val DeepBlue = Color(0xFF0D2137)
@@ -65,9 +67,15 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun VitaAITheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
+    val mode by ThemeManager.mode
+    val systemDark = isSystemInDarkTheme()
+    val darkTheme = when (mode) {
+        ThemeManager.MODE_LIGHT -> false
+        ThemeManager.MODE_DARK -> true
+        else -> systemDark
+    }
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val view = LocalView.current
     if (!view.isInEditMode) {

@@ -12,6 +12,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,12 +23,16 @@ import com.vitaai.app.ui.theme.VitaAITheme
 import com.vitaai.app.ui.theme.NavyBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.utils.LanguageManager
+import com.vitaai.app.utils.NotificationScheduler
+import com.vitaai.app.utils.ThemeManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         LanguageManager.loadSavedLanguage(this)
+        ThemeManager.load(this)
+        NotificationScheduler.ensureChannel(this)
         super.onCreate(savedInstanceState)
         setContent {
             VitaAITheme {
@@ -82,6 +87,12 @@ class MainActivity : ComponentActivity() {
                             onGoCamera = { navController.navigate("camera") },
                             onGoSettings = { navController.navigate("settings") },
                             onGoLevel = { navController.navigate("level") },
+                            onGoWater = { navController.navigate("water") },
+                            onGoFoodHistory = { navController.navigate("foodhistory") },
+                            onGoGoals = { navController.navigate("goals") },
+                            onGoAchievements = { navController.navigate("achievements") },
+                            onGoExercise = { navController.navigate("exercise") },
+                            onGoWeeklyReport = { navController.navigate("weekly") },
                             onLogout = { navController.navigate("login") { popUpTo("home") { inclusive = true } } }
                         )
                     }
@@ -227,7 +238,46 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         ) { padding ->
-                            SettingsScreen(modifier = Modifier.padding(padding))
+                            SettingsScreen(
+                                modifier = Modifier.padding(padding),
+                                onGoBMR = { navController.navigate("bmr") }
+                            )
+                        }
+                    }
+
+                    composable("water") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("water_tracker")) }) { p ->
+                            WaterTrackerScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("foodhistory") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("food_history")) }) { p ->
+                            FoodHistoryScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("goals") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("my_goals")) }) { p ->
+                            GoalsScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("achievements") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("achievements")) }) { p ->
+                            AchievementsScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("exercise") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("exercise_log")) }) { p ->
+                            ExerciseScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("weekly") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("weekly_report")) }) { p ->
+                            WeeklyReportScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("bmr") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("bmr_calculator")) }) { p ->
+                            BMRCalculatorScreen(modifier = Modifier.padding(p))
                         }
                     }
 
@@ -252,4 +302,18 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun topBarWithBack(navController: NavController, title: String) {
+    TopAppBar(
+        title = { Text(title, color = Color.White) },
+        navigationIcon = {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Gold)
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = NavyBlue)
+    )
 }
