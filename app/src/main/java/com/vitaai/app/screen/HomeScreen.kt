@@ -27,6 +27,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
+import com.vitaai.app.utils.DailyChallengeManager
 import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.NutritionCalculator
 import com.vitaai.app.utils.NutritionLog
@@ -53,6 +54,12 @@ fun HomeScreen(
     onGoAchievements: () -> Unit,
     onGoExercise: () -> Unit,
     onGoWeeklyReport: () -> Unit,
+    onGoMealPlanner: () -> Unit,
+    onGoFavorites: () -> Unit,
+    onGoMonthlyStats: () -> Unit,
+    onGoVitals: () -> Unit,
+    onGoShoppingList: () -> Unit,
+    onGoRecipes: () -> Unit,
     onLogout: () -> Unit
 ) {
     val user = FirebaseAuth.getInstance().currentUser
@@ -71,6 +78,7 @@ fun HomeScreen(
     var hasPlan by remember { mutableStateOf(false) }
 
     var streakCurrent by remember { mutableStateOf(0) }
+    var challenge by remember { mutableStateOf<DailyChallengeManager.TodayChallenge?>(null) }
     var totalsCalories by remember { mutableStateOf(0) }
     var totalsProtein by remember { mutableStateOf(0) }
     var totalsCarbs by remember { mutableStateOf(0) }
@@ -112,6 +120,7 @@ fun HomeScreen(
             }
 
         StreakManager.loadStreak { s -> streakCurrent = s.current }
+        DailyChallengeManager.loadToday { c -> challenge = c }
         NutritionLog.loadToday { t ->
             totalsCalories = t.calories; totalsProtein = t.proteinG
             totalsCarbs = t.carbsG; totalsFat = t.fatG
@@ -181,6 +190,18 @@ fun HomeScreen(
                 DrawerItem("📈", LanguageManager.t("weekly_report")) {
                     scope.launch { drawerState.close() }; onGoWeeklyReport()
                 }
+                DrawerItem("📅", LanguageManager.t("monthly_stats")) {
+                    scope.launch { drawerState.close() }; onGoMonthlyStats()
+                }
+                DrawerItem("🍳", LanguageManager.t("meal_planner")) {
+                    scope.launch { drawerState.close() }; onGoMealPlanner()
+                }
+                DrawerItem("📖", LanguageManager.t("recipes")) {
+                    scope.launch { drawerState.close() }; onGoRecipes()
+                }
+                DrawerItem("🛒", LanguageManager.t("shopping_list")) {
+                    scope.launch { drawerState.close() }; onGoShoppingList()
+                }
                 DrawerItem("💬", LanguageManager.t("nutritionist_ia")) {
                     scope.launch { drawerState.close() }; onGoChat()
                 }
@@ -189,6 +210,12 @@ fun HomeScreen(
                 }
                 DrawerItem("🍽️", LanguageManager.t("food_history")) {
                     scope.launch { drawerState.close() }; onGoFoodHistory()
+                }
+                DrawerItem("⭐", LanguageManager.t("favorites")) {
+                    scope.launch { drawerState.close() }; onGoFavorites()
+                }
+                DrawerItem("❤️", LanguageManager.t("vitals")) {
+                    scope.launch { drawerState.close() }; onGoVitals()
                 }
                 DrawerItem("💧", LanguageManager.t("water_tracker")) {
                     scope.launch { drawerState.close() }; onGoWater()
@@ -341,6 +368,81 @@ fun HomeScreen(
                                 NutrientRing("💪", totalsProtein, targets!!.proteinG, Color(0xFF42A5F5))
                                 NutrientRing("🍞", totalsCarbs, targets!!.carbsG, Color(0xFFFFA726))
                                 NutrientRing("🥑", totalsFat, targets!!.fatG, Color(0xFF66BB6A))
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                // === DAILY CHALLENGE ===
+                challenge?.let { c ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (c.completed) Gold.copy(alpha = 0.25f)
+                            else Color(0xFF673AB7).copy(alpha = 0.35f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("⚔️", fontSize = 18.sp)
+                                Spacer(Modifier.width(6.dp))
+                                Text(LanguageManager.t("daily_challenge"),
+                                    fontSize = 12.sp,
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontWeight = FontWeight.SemiBold)
+                                Spacer(Modifier.weight(1f))
+                                Text("+${c.challenge.xpReward} XP",
+                                    fontSize = 12.sp,
+                                    color = Gold,
+                                    fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(c.challenge.emoji, fontSize = 36.sp)
+                                Spacer(Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(LanguageManager.t(c.challenge.titleKey),
+                                        fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                                        color = Color.White)
+                                    Text(LanguageManager.t(c.challenge.descKey),
+                                        fontSize = 12.sp,
+                                        color = Color.White.copy(alpha = 0.7f),
+                                        lineHeight = 16.sp)
+                                }
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            if (c.completed) {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                                        .background(Gold.copy(alpha = 0.3f))
+                                        .padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("✅ ${LanguageManager.t("challenge_completed")}",
+                                        fontSize = 13.sp, color = Gold,
+                                        fontWeight = FontWeight.Bold)
+                                }
+                            } else {
+                                Button(
+                                    onClick = {
+                                        DailyChallengeManager.markCompleted { xp ->
+                                            if (xp > 0) {
+                                                challenge = c.copy(completed = true)
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth().height(40.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Gold,
+                                        contentColor = DeepBlue
+                                    )
+                                ) {
+                                    Text(LanguageManager.t("mark_complete"),
+                                        fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }

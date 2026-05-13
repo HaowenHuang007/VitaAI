@@ -93,8 +93,28 @@ class MainActivity : ComponentActivity() {
                             onGoAchievements = { navController.navigate("achievements") },
                             onGoExercise = { navController.navigate("exercise") },
                             onGoWeeklyReport = { navController.navigate("weekly") },
+                            onGoMealPlanner = { navController.navigate("mealplanner") },
+                            onGoFavorites = { navController.navigate("favorites") },
+                            onGoMonthlyStats = { navController.navigate("monthly") },
+                            onGoVitals = { navController.navigate("vitals") },
+                            onGoShoppingList = { navController.navigate("shopping") },
+                            onGoRecipes = { navController.navigate("recipes") },
                             onLogout = { navController.navigate("login") { popUpTo("home") { inclusive = true } } }
                         )
+
+                        // Handle App Shortcut deep links once after login
+                        LaunchedEffect(Unit) {
+                            val data = intent?.data
+                            if (data?.scheme == "vitaai" && data.host == "shortcut") {
+                                when (data.pathSegments.firstOrNull()) {
+                                    "camera" -> navController.navigate("camera")
+                                    "water" -> navController.navigate("water")
+                                    "chat" -> navController.navigate("chat")
+                                    "mood" -> navController.navigate("mood")
+                                }
+                                intent.data = null
+                            }
+                        }
                     }
 
                     composable("questionnaire") {
@@ -278,6 +298,36 @@ class MainActivity : ComponentActivity() {
                     composable("bmr") {
                         Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("bmr_calculator")) }) { p ->
                             BMRCalculatorScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("mealplanner") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("meal_planner")) }) { p ->
+                            MealPlannerScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("favorites") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("favorites")) }) { p ->
+                            FavoritesScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("monthly") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("monthly_stats")) }) { p ->
+                            MonthlyStatsScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("vitals") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("vitals")) }) { p ->
+                            VitalsScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("shopping") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("shopping_list")) }) { p ->
+                            ShoppingListScreen(modifier = Modifier.padding(p))
+                        }
+                    }
+                    composable("recipes") {
+                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("recipes")) }) { p ->
+                            RecipesScreen(modifier = Modifier.padding(p))
                         }
                     }
 
