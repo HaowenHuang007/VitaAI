@@ -1,9 +1,13 @@
 package com.vitaai.app.screen
 
-import android.content.Context
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -22,25 +26,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.Dispatchers
+import com.vitaai.app.utils.AchievementManager
+import com.vitaai.app.utils.FoodAnalysis
+import com.vitaai.app.utils.LanguageManager
+import com.vitaai.app.utils.NutritionLog
+import com.vitaai.app.utils.StreakManager
+import com.vitaai.app.utils.XPManager
+import com.vitaai.app.utils.analyzeImageWithOpenAI
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import com.vitaai.app.utils.XPManager
 
 @Composable
 fun CameraScreen(modifier: Modifier = Modifier) {
@@ -50,17 +54,58 @@ fun CameraScreen(modifier: Modifier = Modifier) {
     val db = FirebaseFirestore.getInstance()
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
+    var cameraPermissionGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted -> cameraPermissionGranted = granted }
+
+    LaunchedEffect(Unit) {
+        if (!cameraPermissionGranted) permissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
     var isAnalyzing by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf("") }
+    var analysis by remember { mutableStateOf<FoodAnalysis?>(null) }
     var showCamera by remember { mutableStateOf(true) }
     var savedMsg by remember { mutableStateOf("") }
+    val langName = when (LanguageManager.currentLanguage.value) {
+        "en" -> "English"; "zh" -> "Chinese"; "fr" -> "French"; "pt" -> "Portuguese"
+        else -> "Spanish"
+    }
 
-    val cameraExecutor: ExecutorService = remember { Executors.newSingleThreadExecutor() }
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    DisposableEffect(Unit) { onDispose { cameraExecutor.shutdown() } }
+
+    if (!cameraPermissionGranted) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
+                Text("📷", fontSize = 64.sp)
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    LanguageManager.t("camera_permission_required"),
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(LanguageManager.t("grant_permission"))
+                }
+            }
+        }
+        return
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         if (showCamera) {
-            // Vista de cámara
             Box(modifier = Modifier.weight(1f)) {
                 AndroidView(
                     factory = { ctx ->
@@ -75,7 +120,6 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                                 .build()
                             imageCapture = imageCaptureBuilder
-
                             try {
                                 cameraProvider.unbindAll()
                                 cameraProvider.bindToLifecycle(
@@ -93,11 +137,7 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Overlay con guía
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Box(
                         modifier = Modifier
                             .size(250.dp)
@@ -105,14 +145,13 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                             .background(Color.White.copy(alpha = 0.1f))
                     )
                     Text(
-                        "📸 Apunta al alimento",
+                        "📸 ${LanguageManager.t("point_at_food")}",
                         color = Color.White,
                         modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp),
                         fontSize = 16.sp
                     )
                 }
 
-                // Botón de captura
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -128,15 +167,20 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                                 ContextCompat.getMainExecutor(context),
                                 object : ImageCapture.OnImageCapturedCallback() {
                                     override fun onCaptureSuccess(image: ImageProxy) {
-                                        val bitmap = imageProxyToBitmap(image)
+                                        val rotation = image.imageInfo.rotationDegrees
+                                        val bitmap = imageProxyToBitmap(image, rotation)
                                         image.close()
                                         scope.launch {
                                             try {
                                                 val base64 = bitmapToBase64(bitmap)
-                                                result = analyzeImageWithOpenAI(base64)
+                                                val a = analyzeImageWithOpenAI(base64, langName)
+                                                analysis = a
+                                                result = a.displayText
                                                 showCamera = false
                                             } catch (e: Exception) {
-                                                result = "Error al analizar: ${e.message}"
+                                                result = LanguageManager.t("error_analyzing") + ": ${e.message}"
+                                                analysis = null
+                                                showCamera = false
                                             }
                                             isAnalyzing = false
                                         }
@@ -162,7 +206,6 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                 }
             }
         } else {
-            // Resultado
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -170,9 +213,12 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                     .padding(24.dp)
             ) {
                 Spacer(Modifier.height(16.dp))
-                Text("🔍 Análisis nutricional", fontSize = 22.sp,
+                Text(
+                    "🔍 ${LanguageManager.t("nutritional_analysis")}",
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary)
+                    color = MaterialTheme.colorScheme.primary
+                )
                 Spacer(Modifier.height(16.dp))
 
                 Card(
@@ -183,7 +229,7 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                     )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("🤖 Resultado de IA", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text("🤖 ${LanguageManager.t("ai_result")}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
                         Text(result, fontSize = 14.sp, lineHeight = 22.sp)
                     }
@@ -200,30 +246,42 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                 Button(
                     onClick = {
                         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                        val a = analysis
                         db.collection("users").document(uid)
                             .collection("foodlog")
                             .add(mapOf(
                                 "date" to today,
                                 "analysis" to result,
+                                "name" to (a?.name ?: ""),
+                                "calories" to (a?.calories ?: 0),
+                                "proteinG" to (a?.proteinG ?: 0),
+                                "carbsG" to (a?.carbsG ?: 0),
+                                "fatG" to (a?.fatG ?: 0),
+                                "rating" to (a?.rating ?: ""),
                                 "timestamp" to System.currentTimeMillis()
                             ))
                             .addOnSuccessListener {
+                                if (a != null) {
+                                    NutritionLog.addMeal(a.calories, a.proteinG, a.carbsG, a.fatG)
+                                }
+                                StreakManager.recordActivity()
+                                AchievementManager.unlock("first_food")
                                 XPManager.addXPWithLimit(
                                     amount = XPManager.XP_FOOD_SCAN,
                                     actionKey = XPManager.KEY_FOOD,
                                     dailyLimit = 3
                                 ) { added ->
                                     savedMsg = if (added > 0)
-                                        "✅ Guardado · +${added} XP 🏆"
+                                        "✅ ${LanguageManager.t("saved")} · +${added} XP 🏆"
                                     else
-                                        "✅ Guardado (máximo 3 fotos con XP por día)"
+                                        "✅ ${LanguageManager.t("saved")} (${LanguageManager.t("xp_daily_limit_food")})"
                                 }
                             }
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("💾 Guardar en mi registro", fontSize = 16.sp)
+                    Text("💾 ${LanguageManager.t("save_to_log")}", fontSize = 16.sp)
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -237,75 +295,25 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("📸 Tomar otra foto", fontSize = 16.sp)
+                    Text("📸 ${LanguageManager.t("take_another_photo")}", fontSize = 16.sp)
                 }
             }
         }
     }
 }
 
-fun imageProxyToBitmap(image: ImageProxy): Bitmap {
+fun imageProxyToBitmap(image: ImageProxy, rotationDegrees: Int = 0): Bitmap {
     val buffer = image.planes[0].buffer
     val bytes = ByteArray(buffer.remaining())
     buffer.get(bytes)
-    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    val raw = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    if (rotationDegrees == 0) return raw
+    val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+    return Bitmap.createBitmap(raw, 0, 0, raw.width, raw.height, matrix, true)
 }
 
 fun bitmapToBase64(bitmap: Bitmap): String {
     val stream = ByteArrayOutputStream()
     bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
     return Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
-}
-
-suspend fun analyzeImageWithOpenAI(base64Image: String): String = withContext(Dispatchers.IO) {
-    val apiKey = "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"
-    val url = URL("https://api.openai.com/v1/chat/completions")
-    val connection = url.openConnection() as HttpURLConnection
-    connection.requestMethod = "POST"
-    connection.setRequestProperty("Content-Type", "application/json")
-    connection.setRequestProperty("Authorization", "Bearer $apiKey")
-    connection.doOutput = true
-
-    val imageContent = JSONObject().apply {
-        put("type", "image_url")
-        put("image_url", JSONObject().apply {
-            put("url", "data:image/jpeg;base64,$base64Image")
-        })
-    }
-
-    val textContent = JSONObject().apply {
-        put("type", "text")
-        put("text", """
-            Analiza este alimento y responde en español con:
-            🍽️ Alimento identificado: [nombre]
-            🔥 Calorías estimadas: [número] kcal
-            💪 Proteínas: [g]
-            🍞 Carbohidratos: [g]
-            🥑 Grasas: [g]
-            ✅ Valoración: [saludable/moderado/evitar]
-            💡 Consejo: [1 consejo nutricional breve]
-        """.trimIndent())
-    }
-
-    val body = JSONObject().apply {
-        put("model", "gpt-4o-mini")
-        put("messages", JSONArray().apply {
-            put(JSONObject().apply {
-                put("role", "user")
-                put("content", JSONArray().apply {
-                    put(textContent)
-                    put(imageContent)
-                })
-            })
-        })
-        put("max_tokens", 500)
-    }.toString()
-
-    connection.outputStream.write(body.toByteArray())
-    val response = connection.inputStream.bufferedReader().readText()
-    JSONObject(response)
-        .getJSONArray("choices")
-        .getJSONObject(0)
-        .getJSONObject("message")
-        .getString("content")
 }

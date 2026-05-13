@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.utils.LanguageManager
+import com.vitaai.app.utils.callOpenAIWithHistory
 import kotlinx.coroutines.launch
 
 data class Mood(val emoji: String, val label: String, val description: String)
@@ -188,7 +189,7 @@ fun MoodScreen(modifier: Modifier = Modifier, onDone: () -> Unit = {}) {
                                         "recommendation" to recommendation
                                     ))
                             } catch (e: Exception) {
-                                recommendation = "Error"
+                                recommendation = LanguageManager.t("chat_error")
                             }
                             isLoading = false
                         }

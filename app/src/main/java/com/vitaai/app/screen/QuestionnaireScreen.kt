@@ -10,11 +10,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.ui.theme.NavyBlue
+import com.vitaai.app.utils.LanguageManager
 
 @Composable
 fun QuestionnaireScreen(
@@ -36,8 +39,8 @@ fun QuestionnaireScreen(
     var isLoading by remember { mutableStateOf(true) }
     var showQuestionnaire by remember { mutableStateOf(false) }
 
-    val goals = listOf("Perder peso", "Ganar músculo", "Mantener peso", "Mejorar salud")
-    val activities = listOf("Sedentario", "Ligero", "Moderado", "Activo", "Muy activo")
+    val goalKeys = listOf("lose_weight", "gain_muscle", "maintain_weight", "improve_health")
+    val activityKeys = listOf("sedentary", "light", "moderate", "active", "very_active")
 
     LaunchedEffect(Unit) {
         if (uid != null) {
@@ -70,18 +73,16 @@ fun QuestionnaireScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         when {
-            // Loading
             isLoading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(Modifier.height(12.dp))
-                        Text("Cargando tu plan...", color = MaterialTheme.colorScheme.outline)
+                        Text(LanguageManager.t("loading_plan"), color = MaterialTheme.colorScheme.outline)
                     }
                 }
             }
 
-            // Mostrar plan existente
             hasExistingPlan && !showQuestionnaire -> {
                 Column(
                     modifier = Modifier
@@ -90,11 +91,11 @@ fun QuestionnaireScreen(
                         .padding(24.dp)
                 ) {
                     Spacer(Modifier.height(16.dp))
-                    Text("🤖 Tu Plan Actual", fontSize = 24.sp,
+                    Text(LanguageManager.t("current_plan"), fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(8.dp))
-                    Text("Tu plan personalizado guardado",
+                    Text(LanguageManager.t("saved_plan"),
                         fontSize = 14.sp, color = MaterialTheme.colorScheme.outline)
 
                     Spacer(Modifier.height(20.dp))
@@ -107,7 +108,7 @@ fun QuestionnaireScreen(
                         )
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("🥗 Plan de Dieta", fontSize = 18.sp,
+                            Text(LanguageManager.t("diet_plan"), fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(8.dp))
                             Text(existingDietPlan, fontSize = 14.sp, lineHeight = 22.sp)
@@ -124,7 +125,7 @@ fun QuestionnaireScreen(
                         )
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("💪 Plan de Ejercicio", fontSize = 18.sp,
+                            Text(LanguageManager.t("exercise_plan"), fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(8.dp))
                             Text(existingExercisePlan, fontSize = 14.sp, lineHeight = 22.sp)
@@ -139,13 +140,12 @@ fun QuestionnaireScreen(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = NavyBlue)
                     ) {
-                        Text("🔄 Actualizar mi plan", fontSize = 16.sp, color = Color.White)
+                        Text(LanguageManager.t("update_my_plan"), fontSize = 16.sp, color = Color.White)
                     }
                     Spacer(Modifier.height(32.dp))
                 }
             }
 
-            // Mostrar cuestionario
             else -> {
                 Column(
                     modifier = Modifier
@@ -158,48 +158,54 @@ fun QuestionnaireScreen(
                     Text("📋", fontSize = 48.sp)
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        if (hasExistingPlan) "Actualizar tu perfil" else "Tu perfil",
+                        if (hasExistingPlan) LanguageManager.t("update_profile") else LanguageManager.t("profile"),
                         fontSize = 28.sp, fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Text("Cuéntanos sobre ti", fontSize = 14.sp,
+                    Text(LanguageManager.t("tell_us"), fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.outline)
 
                     Spacer(Modifier.height(32.dp))
 
                     OutlinedTextField(
-                        value = age, onValueChange = { age = it },
-                        label = { Text("Edad") },
+                        value = age,
+                        onValueChange = { new -> if (new.all { it.isDigit() }) age = new },
+                        label = { Text(LanguageManager.t("age")) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp), singleLine = true
+                        shape = RoundedCornerShape(12.dp), singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
-                        value = weight, onValueChange = { weight = it },
-                        label = { Text("Peso (kg)") },
+                        value = weight,
+                        onValueChange = { new -> if (new.matches(Regex("^\\d{0,3}([.,]\\d{0,2})?$"))) weight = new.replace(',', '.') },
+                        label = { Text(LanguageManager.t("weight")) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp), singleLine = true
+                        shape = RoundedCornerShape(12.dp), singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
-                        value = height, onValueChange = { height = it },
-                        label = { Text("Altura (cm)") },
+                        value = height,
+                        onValueChange = { new -> if (new.matches(Regex("^\\d{0,3}([.,]\\d{0,2})?$"))) height = new.replace(',', '.') },
+                        label = { Text(LanguageManager.t("height")) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp), singleLine = true
+                        shape = RoundedCornerShape(12.dp), singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
 
                     Spacer(Modifier.height(24.dp))
-                    Text("🎯 Objetivo", fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+                    Text(LanguageManager.t("goal"), fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.align(Alignment.Start))
                     Spacer(Modifier.height(8.dp))
-                    goals.chunked(2).forEach { row ->
+                    goalKeys.chunked(2).forEach { row ->
                         Row(modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            row.forEach { goal ->
+                            row.forEach { goalKey ->
                                 FilterChip(
-                                    selected = selectedGoal == goal,
-                                    onClick = { selectedGoal = goal },
-                                    label = { Text(goal) },
+                                    selected = selectedGoal == goalKey,
+                                    onClick = { selectedGoal = goalKey },
+                                    label = { Text(LanguageManager.t(goalKey)) },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -208,18 +214,18 @@ fun QuestionnaireScreen(
                     }
 
                     Spacer(Modifier.height(16.dp))
-                    Text("🏃 Nivel de actividad", fontSize = 16.sp,
+                    Text(LanguageManager.t("activity_level"), fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.align(Alignment.Start))
                     Spacer(Modifier.height(8.dp))
-                    activities.chunked(2).forEach { row ->
+                    activityKeys.chunked(2).forEach { row ->
                         Row(modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            row.forEach { activity ->
+                            row.forEach { activityKey ->
                                 FilterChip(
-                                    selected = selectedActivity == activity,
-                                    onClick = { selectedActivity = activity },
-                                    label = { Text(activity) },
+                                    selected = selectedActivity == activityKey,
+                                    onClick = { selectedActivity = activityKey },
+                                    label = { Text(LanguageManager.t(activityKey)) },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -229,22 +235,29 @@ fun QuestionnaireScreen(
 
                     Spacer(Modifier.height(24.dp))
 
-                    val isValid = age.isNotEmpty() && weight.isNotEmpty() &&
-                            height.isNotEmpty() && selectedGoal.isNotEmpty() &&
-                            selectedActivity.isNotEmpty()
+                    val parsedAge = age.toIntOrNull()
+                    val parsedWeight = weight.toDoubleOrNull()
+                    val parsedHeight = height.toDoubleOrNull()
+                    val isValid = parsedAge != null && parsedAge in 1..120 &&
+                            parsedWeight != null && parsedWeight in 20.0..300.0 &&
+                            parsedHeight != null && parsedHeight in 50.0..250.0 &&
+                            selectedGoal.isNotEmpty() && selectedActivity.isNotEmpty()
 
                     Button(
                         onClick = {
-                            onSubmit(age.toInt(), weight.toDouble(),
-                                height.toDouble(), selectedGoal, selectedActivity)
+                            onSubmit(
+                                parsedAge!!, parsedWeight!!, parsedHeight!!,
+                                LanguageManager.t(selectedGoal),
+                                LanguageManager.t(selectedActivity)
+                            )
                         },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = RoundedCornerShape(12.dp),
                         enabled = isValid
                     ) {
                         Text(
-                            if (hasExistingPlan) "Actualizar plan con IA 🔄"
-                            else "Generar mi plan con IA 🤖",
+                            if (hasExistingPlan) LanguageManager.t("update_plan")
+                            else LanguageManager.t("generate_plan"),
                             fontSize = 16.sp
                         )
                     }
@@ -256,7 +269,7 @@ fun QuestionnaireScreen(
                             modifier = Modifier.fillMaxWidth().height(52.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("← Ver plan actual", fontSize = 16.sp)
+                            Text(LanguageManager.t("see_current_plan"), fontSize = 16.sp)
                         }
                     }
                     Spacer(Modifier.height(32.dp))
