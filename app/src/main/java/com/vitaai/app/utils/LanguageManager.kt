@@ -188,6 +188,7 @@ object LanguageManager {
             "pwd_wrong_current" to "Contraseña actual incorrecta",
             "choose_exercise" to "Elige un ejercicio",
             "duration_min" to "Duración (min)",
+            "exercise_time" to "Hora del ejercicio",
             "recent_history" to "Historial reciente",
             "ex_walking" to "Caminar",
             "ex_running" to "Correr",
@@ -383,6 +384,7 @@ object LanguageManager {
             "pwd_wrong_current" to "Current password is incorrect",
             "choose_exercise" to "Pick an exercise",
             "duration_min" to "Duration (min)",
+            "exercise_time" to "Exercise time",
             "recent_history" to "Recent history",
             "ex_walking" to "Walking",
             "ex_running" to "Running",
@@ -619,6 +621,7 @@ object LanguageManager {
             "ach_goal_d" to "达到目标体重"
         ),
         "fr" to mapOf(
+            "exercise_time" to "Heure de l'exercice",
             "app_name" to "VitaAI",
             "login" to "Se connecter",
             "register" to "S'inscrire",
@@ -814,6 +817,7 @@ object LanguageManager {
             "ach_goal_d" to "Atteignez votre poids cible"
         ),
         "pt" to mapOf(
+            "exercise_time" to "Hora do exercício",
             "app_name" to "VitaAI",
             "login" to "Entrar",
             "register" to "Registrar",

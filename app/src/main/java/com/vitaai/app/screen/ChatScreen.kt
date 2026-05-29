@@ -22,6 +22,35 @@ import com.vitaai.app.utils.XPManager
 import com.vitaai.app.utils.callOpenAIWithHistory
 import kotlinx.coroutines.launch
 
+private object ChatConstants {
+    const val USERS_COLLECTION = "users"
+    const val FIELD_GOAL = "goal"
+    const val FIELD_WEIGHT = "weight"
+    const val FIELD_DIET_PLAN = "dietPlan"
+
+    const val LANG_EN = "en"
+    const val LANG_ZH = "zh"
+    const val LANG_FR = "fr"
+    const val LANG_PT = "pt"
+
+    const val NAME_ENGLISH = "English"
+    const val NAME_CHINESE = "Chinese"
+    const val NAME_FRENCH = "French"
+    const val NAME_PORTUGUESE = "Portuguese"
+    const val NAME_SPANISH = "Spanish"
+
+    const val ROLE_USER = "user"
+    const val ROLE_ASSISTANT = "assistant"
+
+    const val T_ASK_ME = "ask_me"
+    const val T_CHAT_ERROR = "chat_error"
+    const val T_SEND = "send"
+
+    const val PROFILE_PREFIX = "Goal: "
+    const val PROFILE_WEIGHT = ", Weight: "
+    const val PROFILE_UNIT_KG = "kg. Current plan: "
+}
+
 data class ChatMessage(
     val content: String,
     val isUser: Boolean,
@@ -40,19 +69,20 @@ fun ChatScreen(modifier: Modifier = Modifier) {
     var userProfile by remember { mutableStateOf("") }
 
     val langName = when(LanguageManager.currentLanguage.value) {
-        "en" -> "English"
-        "zh" -> "Chinese"
-        "fr" -> "French"
-        "pt" -> "Portuguese"
-        else -> "Spanish"
+        ChatConstants.LANG_EN -> ChatConstants.NAME_ENGLISH
+        ChatConstants.LANG_ZH -> ChatConstants.NAME_CHINESE
+        ChatConstants.LANG_FR -> ChatConstants.NAME_FRENCH
+        ChatConstants.LANG_PT -> ChatConstants.NAME_PORTUGUESE
+        else -> ChatConstants.NAME_SPANISH
     }
 
+    // Emoji removed: 🥗
     val welcomeMsg = when(LanguageManager.currentLanguage.value) {
-        "en" -> "Hi! I'm your personal AI nutritionist 🥗 I can help with food advice, analyze your meals and adjust your plan. How can I help you today?"
-        "zh" -> "你好！我是你的AI私人营养师 🥗 我可以帮你提供饮食建议、分析你的饮食并调整你的计划。今天需要什么帮助？"
-        "fr" -> "Bonjour! Je suis votre nutritionniste IA personnel 🥗 Je peux vous aider avec des conseils alimentaires. Comment puis-je vous aider?"
-        "pt" -> "Olá! Sou seu nutricionista IA pessoal 🥗 Posso ajudá-lo com conselhos alimentares. Como posso ajudá-lo hoje?"
-        else -> "¡Hola! Soy tu nutricionista personal IA 🥗 Puedo ayudarte con consejos de alimentación, analizar tus comidas y ajustar tu plan. ¿En qué te ayudo hoy?"
+        ChatConstants.LANG_EN -> "Hi! I'm your personal AI nutritionist. I can help with food advice, analyze your meals and adjust your plan. How can I help you today?"
+        ChatConstants.LANG_ZH -> "你好！我是你的AI私人营养师。我可以帮你提供饮食建议、分析你的饮食并调整你的计划。今天需要什么帮助？"
+        ChatConstants.LANG_FR -> "Bonjour! Je suis votre nutritionniste IA personnel. Je peux vous aider avec des conseils alimentaires. Comment puis-je vous aider?"
+        ChatConstants.LANG_PT -> "Olá! Sou seu nutricionista IA pessoal. Posso ajudá-lo com conselhos alimentares. Como posso ajudá-lo hoje?"
+        else -> "¡Hola! Soy tu nutricionista personal IA. Puedo ayudarte con consejos de alimentación, analizar tus comidas y ajustar tu plan. ¿En qué te ayudo hoy?"
     }
 
     var messages by remember {
@@ -60,12 +90,12 @@ fun ChatScreen(modifier: Modifier = Modifier) {
     }
 
     LaunchedEffect(Unit) {
-        db.collection("users").document(uid).get()
+        db.collection(ChatConstants.USERS_COLLECTION).document(uid).get()
             .addOnSuccessListener { doc ->
-                val goal = doc.getString("goal") ?: ""
-                val weight = doc.getDouble("weight") ?: 0.0
-                val dietPlan = doc.getString("dietPlan") ?: ""
-                userProfile = "Goal: $goal, Weight: ${weight}kg. Current plan: $dietPlan"
+                val goal = doc.getString(ChatConstants.FIELD_GOAL) ?: ""
+                val weight = doc.getDouble(ChatConstants.FIELD_WEIGHT) ?: 0.0
+                val dietPlan = doc.getString(ChatConstants.FIELD_DIET_PLAN) ?: ""
+                userProfile = "${ChatConstants.PROFILE_PREFIX}$goal${ChatConstants.PROFILE_WEIGHT}${weight}${ChatConstants.PROFILE_UNIT_KG}$dietPlan"
             }
     }
 
@@ -104,7 +134,7 @@ fun ChatScreen(modifier: Modifier = Modifier) {
         ) {
             OutlinedTextField(
                 value = userInput, onValueChange = { userInput = it },
-                placeholder = { Text(LanguageManager.t("ask_me")) },
+                placeholder = { Text(LanguageManager.t(ChatConstants.T_ASK_ME)) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(24.dp),
                 maxLines = 3
@@ -134,12 +164,12 @@ fun ChatScreen(modifier: Modifier = Modifier) {
                                 - Use emojis occasionally
                             """.trimIndent()
                             val history = messages.map { msg ->
-                                Pair(if (msg.isUser) "user" else "assistant", msg.content)
+                                Pair(if (msg.isUser) ChatConstants.ROLE_USER else ChatConstants.ROLE_ASSISTANT, msg.content)
                             }
                             val response = callOpenAIWithHistory(systemContext, history)
                             messages = messages + ChatMessage(response, false)
                         } catch (e: Exception) {
-                            messages = messages + ChatMessage(LanguageManager.t("chat_error"), false)
+                            messages = messages + ChatMessage(LanguageManager.t(ChatConstants.T_CHAT_ERROR), false)
                         }
                         isLoading = false
                     }
@@ -147,7 +177,7 @@ fun ChatScreen(modifier: Modifier = Modifier) {
                 containerColor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(52.dp)
             ) {
-                Icon(Icons.Default.Send, contentDescription = LanguageManager.t("send"),
+                Icon(Icons.Default.Send, contentDescription = LanguageManager.t(ChatConstants.T_SEND),
                     tint = MaterialTheme.colorScheme.onPrimary)
             }
         }
@@ -165,7 +195,10 @@ fun ChatBubble(msg: ChatMessage) {
                 modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
-            ) { Text("🤖", fontSize = 16.sp) }
+            ) {
+                // TODO: Emoji pure string
+                Text("🤖", fontSize = 16.sp)
+            }
             Spacer(Modifier.width(8.dp))
         }
         Box(
@@ -192,8 +225,10 @@ fun ChatBubble(msg: ChatMessage) {
                 modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.secondaryContainer),
                 contentAlignment = Alignment.Center
-            ) { Text("👤", fontSize = 16.sp) }
+            ) {
+                // TODO: Emoji pure string
+                Text("👤", fontSize = 16.sp)
+            }
         }
     }
 }
-

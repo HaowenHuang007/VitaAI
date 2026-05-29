@@ -19,6 +19,41 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.ui.theme.NavyBlue
 import com.vitaai.app.utils.LanguageManager
 
+private object QuestionnaireConstants {
+    const val USERS_COLLECTION = "users"
+    const val DIET_PLAN_FIELD = "dietPlan"
+    const val EXERCISE_PLAN_FIELD = "exercisePlan"
+    const val AGE_FIELD = "age"
+    const val WEIGHT_FIELD = "weight"
+    const val HEIGHT_FIELD = "height"
+    const val GOAL_FIELD = "goal"
+
+    const val LANG_LOADING_PLAN = "loading_plan"
+    const val LANG_CURRENT_PLAN = "current_plan"
+    const val LANG_SAVED_PLAN = "saved_plan"
+    const val LANG_DIET_PLAN = "diet_plan"
+    const val LANG_EXERCISE_PLAN = "exercise_plan"
+    const val LANG_UPDATE_MY_PLAN = "update_my_plan"
+    const val LANG_UPDATE_PROFILE = "update_profile"
+    const val LANG_PROFILE = "profile"
+    const val LANG_TELL_US = "tell_us"
+    const val LANG_AGE = "age"
+    const val LANG_WEIGHT = "weight"
+    const val LANG_HEIGHT = "height"
+    const val LANG_GOAL = "goal"
+    const val LANG_ACTIVITY_LEVEL = "activity_level"
+    const val LANG_UPDATE_PLAN = "update_plan"
+    const val LANG_GENERATE_PLAN = "generate_plan"
+    const val LANG_SEE_CURRENT_PLAN = "see_current_plan"
+
+    val GOAL_KEYS = listOf("lose_weight", "gain_muscle", "maintain_weight", "improve_health")
+    val ACTIVITY_KEYS = listOf("sedentary", "light", "moderate", "active", "very_active")
+
+    const val DECIMAL_REGEX = "^\\d{0,3}([.,]\\d{0,2})?$"
+    const val COMMA = ","
+    const val DOT = "."
+}
+
 @Composable
 fun QuestionnaireScreen(
     modifier: Modifier = Modifier,
@@ -39,23 +74,20 @@ fun QuestionnaireScreen(
     var isLoading by remember { mutableStateOf(true) }
     var showQuestionnaire by remember { mutableStateOf(false) }
 
-    val goalKeys = listOf("lose_weight", "gain_muscle", "maintain_weight", "improve_health")
-    val activityKeys = listOf("sedentary", "light", "moderate", "active", "very_active")
-
     LaunchedEffect(Unit) {
         if (uid != null) {
-            db.collection("users").document(uid).get()
+            db.collection(QuestionnaireConstants.USERS_COLLECTION).document(uid).get()
                 .addOnSuccessListener { doc ->
-                    val diet = doc.getString("dietPlan") ?: ""
-                    val exercise = doc.getString("exercisePlan") ?: ""
+                    val diet = doc.getString(QuestionnaireConstants.DIET_PLAN_FIELD) ?: ""
+                    val exercise = doc.getString(QuestionnaireConstants.EXERCISE_PLAN_FIELD) ?: ""
                     if (diet.isNotEmpty() && exercise.isNotEmpty()) {
                         existingDietPlan = diet
                         existingExercisePlan = exercise
                         hasExistingPlan = true
-                        age = (doc.getLong("age") ?: 0).let { if (it == 0L) "" else it.toString() }
-                        weight = (doc.getDouble("weight") ?: 0.0).let { if (it == 0.0) "" else it.toString() }
-                        height = (doc.getDouble("height") ?: 0.0).let { if (it == 0.0) "" else it.toString() }
-                        selectedGoal = doc.getString("goal") ?: ""
+                        age = (doc.getLong(QuestionnaireConstants.AGE_FIELD) ?: 0).let { if (it == 0L) "" else it.toString() }
+                        weight = (doc.getDouble(QuestionnaireConstants.WEIGHT_FIELD) ?: 0.0).let { if (it == 0.0) "" else it.toString() }
+                        height = (doc.getDouble(QuestionnaireConstants.HEIGHT_FIELD) ?: 0.0).let { if (it == 0.0) "" else it.toString() }
+                        selectedGoal = doc.getString(QuestionnaireConstants.GOAL_FIELD) ?: ""
                     } else {
                         showQuestionnaire = true
                     }
@@ -78,7 +110,7 @@ fun QuestionnaireScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(Modifier.height(12.dp))
-                        Text(LanguageManager.t("loading_plan"), color = MaterialTheme.colorScheme.outline)
+                        Text(LanguageManager.t(QuestionnaireConstants.LANG_LOADING_PLAN), color = MaterialTheme.colorScheme.outline)
                     }
                 }
             }
@@ -91,11 +123,11 @@ fun QuestionnaireScreen(
                         .padding(24.dp)
                 ) {
                     Spacer(Modifier.height(16.dp))
-                    Text(LanguageManager.t("current_plan"), fontSize = 24.sp,
+                    Text(LanguageManager.t(QuestionnaireConstants.LANG_CURRENT_PLAN), fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(8.dp))
-                    Text(LanguageManager.t("saved_plan"),
+                    Text(LanguageManager.t(QuestionnaireConstants.LANG_SAVED_PLAN),
                         fontSize = 14.sp, color = MaterialTheme.colorScheme.outline)
 
                     Spacer(Modifier.height(20.dp))
@@ -108,7 +140,7 @@ fun QuestionnaireScreen(
                         )
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(LanguageManager.t("diet_plan"), fontSize = 18.sp,
+                            Text(LanguageManager.t(QuestionnaireConstants.LANG_DIET_PLAN), fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(8.dp))
                             Text(existingDietPlan, fontSize = 14.sp, lineHeight = 22.sp)
@@ -125,7 +157,7 @@ fun QuestionnaireScreen(
                         )
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(LanguageManager.t("exercise_plan"), fontSize = 18.sp,
+                            Text(LanguageManager.t(QuestionnaireConstants.LANG_EXERCISE_PLAN), fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(8.dp))
                             Text(existingExercisePlan, fontSize = 14.sp, lineHeight = 22.sp)
@@ -140,7 +172,7 @@ fun QuestionnaireScreen(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = NavyBlue)
                     ) {
-                        Text(LanguageManager.t("update_my_plan"), fontSize = 16.sp, color = Color.White)
+                        Text(LanguageManager.t(QuestionnaireConstants.LANG_UPDATE_MY_PLAN), fontSize = 16.sp, color = Color.White)
                     }
                     Spacer(Modifier.height(32.dp))
                 }
@@ -155,14 +187,15 @@ fun QuestionnaireScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(Modifier.height(16.dp))
+                    // TODO: This string is primarily an emoji
                     Text("📋", fontSize = 48.sp)
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        if (hasExistingPlan) LanguageManager.t("update_profile") else LanguageManager.t("profile"),
+                        if (hasExistingPlan) LanguageManager.t(QuestionnaireConstants.LANG_UPDATE_PROFILE) else LanguageManager.t(QuestionnaireConstants.LANG_PROFILE),
                         fontSize = 28.sp, fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Text(LanguageManager.t("tell_us"), fontSize = 14.sp,
+                    Text(LanguageManager.t(QuestionnaireConstants.LANG_TELL_US), fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.outline)
 
                     Spacer(Modifier.height(32.dp))
@@ -170,7 +203,7 @@ fun QuestionnaireScreen(
                     OutlinedTextField(
                         value = age,
                         onValueChange = { new -> if (new.all { it.isDigit() }) age = new },
-                        label = { Text(LanguageManager.t("age")) },
+                        label = { Text(LanguageManager.t(QuestionnaireConstants.LANG_AGE)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp), singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -178,8 +211,8 @@ fun QuestionnaireScreen(
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
                         value = weight,
-                        onValueChange = { new -> if (new.matches(Regex("^\\d{0,3}([.,]\\d{0,2})?$"))) weight = new.replace(',', '.') },
-                        label = { Text(LanguageManager.t("weight")) },
+                        onValueChange = { new -> if (new.matches(Regex(QuestionnaireConstants.DECIMAL_REGEX))) weight = new.replace(QuestionnaireConstants.COMMA, QuestionnaireConstants.DOT) },
+                        label = { Text(LanguageManager.t(QuestionnaireConstants.LANG_WEIGHT)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp), singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
@@ -187,18 +220,18 @@ fun QuestionnaireScreen(
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
                         value = height,
-                        onValueChange = { new -> if (new.matches(Regex("^\\d{0,3}([.,]\\d{0,2})?$"))) height = new.replace(',', '.') },
-                        label = { Text(LanguageManager.t("height")) },
+                        onValueChange = { new -> if (new.matches(Regex(QuestionnaireConstants.DECIMAL_REGEX))) height = new.replace(QuestionnaireConstants.COMMA, QuestionnaireConstants.DOT) },
+                        label = { Text(LanguageManager.t(QuestionnaireConstants.LANG_HEIGHT)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp), singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
 
                     Spacer(Modifier.height(24.dp))
-                    Text(LanguageManager.t("goal"), fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+                    Text(LanguageManager.t(QuestionnaireConstants.LANG_GOAL), fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.align(Alignment.Start))
                     Spacer(Modifier.height(8.dp))
-                    goalKeys.chunked(2).forEach { row ->
+                    QuestionnaireConstants.GOAL_KEYS.chunked(2).forEach { row ->
                         Row(modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             row.forEach { goalKey ->
@@ -214,11 +247,11 @@ fun QuestionnaireScreen(
                     }
 
                     Spacer(Modifier.height(16.dp))
-                    Text(LanguageManager.t("activity_level"), fontSize = 16.sp,
+                    Text(LanguageManager.t(QuestionnaireConstants.LANG_ACTIVITY_LEVEL), fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.align(Alignment.Start))
                     Spacer(Modifier.height(8.dp))
-                    activityKeys.chunked(2).forEach { row ->
+                    QuestionnaireConstants.ACTIVITY_KEYS.chunked(2).forEach { row ->
                         Row(modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             row.forEach { activityKey ->
@@ -256,8 +289,8 @@ fun QuestionnaireScreen(
                         enabled = isValid
                     ) {
                         Text(
-                            if (hasExistingPlan) LanguageManager.t("update_plan")
-                            else LanguageManager.t("generate_plan"),
+                            if (hasExistingPlan) LanguageManager.t(QuestionnaireConstants.LANG_UPDATE_PLAN)
+                            else LanguageManager.t(QuestionnaireConstants.LANG_GENERATE_PLAN),
                             fontSize = 16.sp
                         )
                     }
@@ -269,7 +302,7 @@ fun QuestionnaireScreen(
                             modifier = Modifier.fillMaxWidth().height(52.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(LanguageManager.t("see_current_plan"), fontSize = 16.sp)
+                            Text(LanguageManager.t(QuestionnaireConstants.LANG_SEE_CURRENT_PLAN), fontSize = 16.sp)
                         }
                     }
                     Spacer(Modifier.height(32.dp))

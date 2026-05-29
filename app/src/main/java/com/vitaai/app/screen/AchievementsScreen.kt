@@ -19,6 +19,17 @@ import com.vitaai.app.ui.theme.NavyBlue
 import com.vitaai.app.utils.AchievementManager
 import com.vitaai.app.utils.LanguageManager
 
+// Constants for UI styling
+private const val SCREEN_PADDING = 20
+private const val SPACING_SMALL = 8
+private const val SPACING_MEDIUM = 12
+private const val SPACING_LARGE = 16
+private const val SPACING_XLARGE = 32
+private const val CARD_CORNER_RADIUS = 20
+private const val ITEM_CORNER_RADIUS = 12
+private const val PROGRESS_BAR_HEIGHT = 10
+private const val PROGRESS_BAR_CORNER_RADIUS = 5
+
 @Composable
 fun AchievementsScreen(modifier: Modifier = Modifier) {
     var unlocked by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -30,48 +41,63 @@ fun AchievementsScreen(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)
     ) {
-        Spacer(Modifier.height(8.dp))
-        Text("🏆 ${LanguageManager.t("achievements")}", fontSize = 24.sp,
-            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(SPACING_SMALL.dp))
+        Text(
+            text = LanguageManager.t("achievements"),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(Modifier.height(SPACING_SMALL.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(CARD_CORNER_RADIUS.dp),
             colors = CardDefaults.cardColors(containerColor = NavyBlue)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(SCREEN_PADDING.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("$unlockedCount / ${all.size}", fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold, color = Gold)
-                Text(LanguageManager.t("unlocked"), fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.7f))
-                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = "$unlockedCount / ${all.size}",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Gold
+                )
+                Text(
+                    text = LanguageManager.t("unlocked"),
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+                Spacer(Modifier.height(SPACING_MEDIUM.dp))
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(10.dp)
-                        .clip(RoundedCornerShape(5.dp))
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(PROGRESS_BAR_HEIGHT.dp)
+                        .clip(RoundedCornerShape(PROGRESS_BAR_CORNER_RADIUS.dp))
                         .background(Color.White.copy(alpha = 0.2f))
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(unlockedCount.toFloat() / all.size.toFloat())
                             .fillMaxHeight()
-                            .clip(RoundedCornerShape(5.dp))
+                            .clip(RoundedCornerShape(PROGRESS_BAR_CORNER_RADIUS.dp))
                             .background(Gold)
                     )
                 }
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(SPACING_LARGE.dp))
 
         all.forEach { ach ->
             val isUnlocked = ach.id in unlocked
             Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                shape = RoundedCornerShape(ITEM_CORNER_RADIUS.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isUnlocked)
                         MaterialTheme.colorScheme.primaryContainer
@@ -82,27 +108,35 @@ fun AchievementsScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // TODO: The following string contains or is primarily an emoji
                     Text(
-                        if (isUnlocked) ach.emoji else "🔒",
+                        text = if (isUnlocked) ach.emoji else "🔒",
                         fontSize = 28.sp
                     )
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(SPACING_MEDIUM.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(LanguageManager.t(ach.titleKey),
+                        Text(
+                            text = LanguageManager.t(ach.titleKey),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isUnlocked) MaterialTheme.colorScheme.onSurface
-                            else MaterialTheme.colorScheme.outline)
-                        Text(LanguageManager.t(ach.descKey),
+                            else MaterialTheme.colorScheme.outline
+                        )
+                        Text(
+                            text = LanguageManager.t(ach.descKey),
                             fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.outline)
+                            color = MaterialTheme.colorScheme.outline
+                        )
                     }
-                    Text("+${ach.xpReward}", fontSize = 13.sp,
+                    Text(
+                        text = "+${ach.xpReward}",
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isUnlocked) Gold else MaterialTheme.colorScheme.outline)
+                        color = if (isUnlocked) Gold else MaterialTheme.colorScheme.outline
+                    )
                 }
             }
         }
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(SPACING_XLARGE.dp))
     }
 }

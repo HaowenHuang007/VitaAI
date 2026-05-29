@@ -46,6 +46,35 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 
+private object CameraConstants {
+    const val USERS_COLLECTION = "users"
+    const val FOODLOG_COLLECTION = "foodlog"
+    
+    const val FIELD_DATE = "date"
+    const val FIELD_ANALYSIS = "analysis"
+    const val FIELD_NAME = "name"
+    const val FIELD_CALORIES = "calories"
+    const val FIELD_PROTEIN = "proteinG"
+    const val FIELD_CARBS = "carbsG"
+    const val FIELD_FAT = "fatG"
+    const val FIELD_RATING = "rating"
+    const val FIELD_TIMESTAMP = "timestamp"
+
+    const val LANG_EN = "en"
+    const val LANG_ZH = "zh"
+    const val LANG_FR = "fr"
+    const val LANG_PT = "pt"
+
+    const val NAME_ENGLISH = "English"
+    const val NAME_CHINESE = "Chinese"
+    const val NAME_FRENCH = "French"
+    const val NAME_PORTUGUESE = "Portuguese"
+    const val NAME_SPANISH = "Spanish"
+
+    const val DATE_FORMAT = "yyyy-MM-dd"
+    const val FIRST_FOOD_ACHIEVEMENT = "first_food"
+}
+
 @Composable
 fun CameraScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -74,8 +103,11 @@ fun CameraScreen(modifier: Modifier = Modifier) {
     var showCamera by remember { mutableStateOf(true) }
     var savedMsg by remember { mutableStateOf("") }
     val langName = when (LanguageManager.currentLanguage.value) {
-        "en" -> "English"; "zh" -> "Chinese"; "fr" -> "French"; "pt" -> "Portuguese"
-        else -> "Spanish"
+        CameraConstants.LANG_EN -> CameraConstants.NAME_ENGLISH
+        CameraConstants.LANG_ZH -> CameraConstants.NAME_CHINESE
+        CameraConstants.LANG_FR -> CameraConstants.NAME_FRENCH
+        CameraConstants.LANG_PT -> CameraConstants.NAME_PORTUGUESE
+        else -> CameraConstants.NAME_SPANISH
     }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
@@ -84,6 +116,7 @@ fun CameraScreen(modifier: Modifier = Modifier) {
     if (!cameraPermissionGranted) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
+                // TODO: Emoji pure string
                 Text("📷", fontSize = 64.sp)
                 Spacer(Modifier.height(16.dp))
                 Text(
@@ -144,8 +177,9 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                             .clip(RoundedCornerShape(16.dp))
                             .background(Color.White.copy(alpha = 0.1f))
                     )
+                    // Emoji removed: 📸
                     Text(
-                        "📸 ${LanguageManager.t("point_at_food")}",
+                        LanguageManager.t("point_at_food"),
                         color = Color.White,
                         modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp),
                         fontSize = 16.sp
@@ -201,7 +235,10 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                             color = MaterialTheme.colorScheme.primary,
                             strokeWidth = 2.dp
                         )
-                        else Text("📸", fontSize = 24.sp)
+                        else {
+                            // TODO: Emoji pure string
+                            Text("📸", fontSize = 24.sp)
+                        }
                     }
                 }
             }
@@ -213,8 +250,9 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                     .padding(24.dp)
             ) {
                 Spacer(Modifier.height(16.dp))
+                // Emoji removed: 🔍
                 Text(
-                    "🔍 ${LanguageManager.t("nutritional_analysis")}",
+                    LanguageManager.t("nutritional_analysis"),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -229,7 +267,8 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                     )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("🤖 ${LanguageManager.t("ai_result")}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        // Emoji removed: 🤖
+                        Text(LanguageManager.t("ai_result"), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
                         Text(result, fontSize = 14.sp, lineHeight = 22.sp)
                     }
@@ -245,43 +284,45 @@ fun CameraScreen(modifier: Modifier = Modifier) {
 
                 Button(
                     onClick = {
-                        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                        val today = SimpleDateFormat(CameraConstants.DATE_FORMAT, Locale.getDefault()).format(Date())
                         val a = analysis
-                        db.collection("users").document(uid)
-                            .collection("foodlog")
+                        db.collection(CameraConstants.USERS_COLLECTION).document(uid)
+                            .collection(CameraConstants.FOODLOG_COLLECTION)
                             .add(mapOf(
-                                "date" to today,
-                                "analysis" to result,
-                                "name" to (a?.name ?: ""),
-                                "calories" to (a?.calories ?: 0),
-                                "proteinG" to (a?.proteinG ?: 0),
-                                "carbsG" to (a?.carbsG ?: 0),
-                                "fatG" to (a?.fatG ?: 0),
-                                "rating" to (a?.rating ?: ""),
-                                "timestamp" to System.currentTimeMillis()
+                                CameraConstants.FIELD_DATE to today,
+                                CameraConstants.FIELD_ANALYSIS to result,
+                                CameraConstants.FIELD_NAME to (a?.name ?: ""),
+                                CameraConstants.FIELD_CALORIES to (a?.calories ?: 0),
+                                CameraConstants.FIELD_PROTEIN to (a?.proteinG ?: 0),
+                                CameraConstants.FIELD_CARBS to (a?.carbsG ?: 0),
+                                CameraConstants.FIELD_FAT to (a?.fatG ?: 0),
+                                CameraConstants.FIELD_RATING to (a?.rating ?: ""),
+                                CameraConstants.FIELD_TIMESTAMP to System.currentTimeMillis()
                             ))
                             .addOnSuccessListener {
                                 if (a != null) {
                                     NutritionLog.addMeal(a.calories, a.proteinG, a.carbsG, a.fatG)
                                 }
                                 StreakManager.recordActivity()
-                                AchievementManager.unlock("first_food")
+                                AchievementManager.unlock(CameraConstants.FIRST_FOOD_ACHIEVEMENT)
                                 XPManager.addXPWithLimit(
                                     amount = XPManager.XP_FOOD_SCAN,
                                     actionKey = XPManager.KEY_FOOD,
                                     dailyLimit = 3
                                 ) { added ->
+                                    // Emoji removed: ✅, 🏆
                                     savedMsg = if (added > 0)
-                                        "✅ ${LanguageManager.t("saved")} · +${added} XP 🏆"
+                                        "${LanguageManager.t("saved")} · +${added} XP"
                                     else
-                                        "✅ ${LanguageManager.t("saved")} (${LanguageManager.t("xp_daily_limit_food")})"
+                                        "${LanguageManager.t("saved")} (${LanguageManager.t("xp_daily_limit_food")})"
                                 }
                             }
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("💾 ${LanguageManager.t("save_to_log")}", fontSize = 16.sp)
+                    // Emoji removed: 💾
+                    Text(LanguageManager.t("save_to_log"), fontSize = 16.sp)
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -295,7 +336,8 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("📸 ${LanguageManager.t("take_another_photo")}", fontSize = 16.sp)
+                    // Emoji removed: 📸
+                    Text(LanguageManager.t("take_another_photo"), fontSize = 16.sp)
                 }
             }
         }

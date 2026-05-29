@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -19,15 +22,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
+
+private const val COLLECTION_USERS = "users"
+private const val FIELD_USERNAME = "username"
+private const val FIELD_EMAIL = "email"
+private const val FIELD_SECURITY_QUESTION = "securityQuestion"
+private const val FIELD_SECURITY_ANSWER = "securityAnswer"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
+    val context = LocalContext.current
 
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -38,13 +49,7 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
     var errorMsg by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
 
-    val securityQuestions = listOf(
-        "¿Cuál es el nombre de tu primera mascota?",
-        "¿En qué ciudad naciste?",
-        "¿Cuál es el apellido de tu madre?",
-        "¿Cuál fue el nombre de tu primera escuela?",
-        "¿Cuál es tu comida favorita?"
-    )
+    val securityQuestions = stringArrayResource(R.array.security_questions)
 
     Box(
         modifier = Modifier
@@ -67,11 +72,14 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                     .clip(RoundedCornerShape(24.dp))
                     .background(Gold.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
-            ) { Text("🌱", fontSize = 48.sp) }
+            ) { 
+                // TODO: Emoji string, needs to be handled
+                Text("🌱", fontSize = 48.sp) 
+            }
 
             Spacer(Modifier.height(20.dp))
-            Text("Crear cuenta", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Gold)
-            Text("Empieza tu camino saludable", fontSize = 14.sp,
+            Text(stringResource(R.string.register_title), fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Gold)
+            Text(stringResource(R.string.register_tagline), fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.7f), textAlign = TextAlign.Center)
 
             Spacer(Modifier.height(32.dp))
@@ -82,13 +90,13 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    Text("Tus datos", fontSize = 20.sp,
+                    Text(stringResource(R.string.register_data_title), fontSize = 20.sp,
                         fontWeight = FontWeight.Bold, color = DeepBlue)
                     Spacer(Modifier.height(20.dp))
 
                     OutlinedTextField(
                         value = username, onValueChange = { username = it },
-                        label = { Text("Nombre de usuario") },
+                        label = { Text(stringResource(R.string.register_username_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp), singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -97,7 +105,7 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
                         value = email, onValueChange = { email = it },
-                        label = { Text("Email") },
+                        label = { Text(stringResource(R.string.common_email)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp), singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -106,7 +114,7 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
                         value = password, onValueChange = { password = it },
-                        label = { Text("Contraseña") },
+                        label = { Text(stringResource(R.string.common_password)) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp), singleLine = true,
@@ -115,9 +123,9 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                     )
 
                     Spacer(Modifier.height(20.dp))
-                    Text("🔒 Pregunta de seguridad", fontSize = 15.sp,
+                    Text(stringResource(R.string.register_security_question_section), fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold, color = DeepBlue)
-                    Text("Para recuperar tu contraseña si la olvidas",
+                    Text(stringResource(R.string.register_security_question_desc),
                         fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
                     Spacer(Modifier.height(12.dp))
 
@@ -129,7 +137,7 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                             value = selectedQuestion,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Selecciona una pregunta") },
+                            label = { Text(stringResource(R.string.register_select_question_label)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                             modifier = Modifier.fillMaxWidth().menuAnchor(),
                             shape = RoundedCornerShape(12.dp),
@@ -155,7 +163,7 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
                         value = securityAnswer, onValueChange = { securityAnswer = it },
-                        label = { Text("Tu respuesta") },
+                        label = { Text(stringResource(R.string.login_security_answer_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp), singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -171,29 +179,42 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                     Button(
                         onClick = {
                             if (selectedQuestion.isEmpty()) {
-                                errorMsg = "Selecciona una pregunta de seguridad"
+                                errorMsg = context.getString(R.string.register_error_select_question)
                                 return@Button
                             }
                             if (securityAnswer.isEmpty()) {
-                                errorMsg = "Escribe tu respuesta de seguridad"
+                                errorMsg = context.getString(R.string.register_error_empty_answer)
                                 return@Button
                             }
                             isLoading = true
                             errorMsg = ""
                             auth.createUserWithEmailAndPassword(email, password)
                                 .addOnSuccessListener { result ->
-                                    val uid = result.user?.uid ?: return@addOnSuccessListener
-                                    db.collection("users").document(uid)
+                                    val uid = result.user?.uid
+                                    if (uid == null) {
+                                        errorMsg = context.getString(R.string.register_error_uid_null)
+                                        isLoading = false
+                                        return@addOnSuccessListener
+                                    }
+
+                                    db.collection(COLLECTION_USERS).document(uid)
                                         .set(mapOf(
-                                            "username" to username,
-                                            "email" to email,
-                                            "securityQuestion" to selectedQuestion,
-                                            "securityAnswer" to securityAnswer.lowercase().trim()
+                                            FIELD_USERNAME to username,
+                                            FIELD_EMAIL to email,
+                                            FIELD_SECURITY_QUESTION to selectedQuestion,
+                                            FIELD_SECURITY_ANSWER to securityAnswer.lowercase().trim()
                                         ))
-                                        .addOnSuccessListener { onRegisterSuccess() }
+                                        .addOnSuccessListener {
+                                            isLoading = false
+                                            onRegisterSuccess()
+                                        }
+                                        .addOnFailureListener {
+                                            errorMsg = context.getString(R.string.register_error_save_profile, it.message ?: "")
+                                            isLoading = false
+                                        }
                                 }
                                 .addOnFailureListener {
-                                    errorMsg = "Error: ${it.message}"
+                                    errorMsg = context.getString(R.string.register_error_create_account, it.message ?: "")
                                     isLoading = false
                                 }
                         },
@@ -206,14 +227,14 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                         if (isLoading) CircularProgressIndicator(
                             modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp
                         )
-                        else Text("Registrarse", fontSize = 16.sp, color = Color.White)
+                        else Text(stringResource(R.string.register_button), fontSize = 16.sp, color = Color.White)
                     }
                 }
             }
 
             Spacer(Modifier.height(16.dp))
             TextButton(onClick = onGoLogin) {
-                Text("¿Ya tienes cuenta? Inicia sesión", color = Gold)
+                Text(stringResource(R.string.register_go_to_login), color = Gold)
             }
             Spacer(Modifier.height(32.dp))
         }

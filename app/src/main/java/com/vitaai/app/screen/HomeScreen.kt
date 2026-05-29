@@ -38,6 +38,29 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+private const val COLLECTION_USERS = "users"
+private const val COLLECTION_MOODS = "moods"
+private const val FIELD_XP = "xp"
+private const val FIELD_DIET_PLAN = "dietPlan"
+private const val FIELD_WEIGHT = "weight"
+private const val FIELD_HEIGHT = "height"
+private const val FIELD_AGE = "age"
+private const val FIELD_ACTIVITY = "activity"
+private const val FIELD_GOAL = "goal"
+private const val FIELD_MOOD = "mood"
+private const val FIELD_EMOJI = "emoji"
+private const val FIELD_RECOMMENDATION = "recommendation"
+
+private const val DATE_FORMAT_ISO = "yyyy-MM-dd"
+private const val DATE_FORMAT_DAY = "EEEE"
+private const val DATE_FORMAT_DISPLAY = "d MMMM"
+
+private const val DEFAULT_WEIGHT = 70.0
+private const val DEFAULT_HEIGHT = 170.0
+private const val DEFAULT_AGE = 25
+private const val DEFAULT_ACTIVITY = "moderate"
+private const val DEFAULT_GOAL = "maintain_weight"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -78,36 +101,36 @@ fun HomeScreen(
     var targets by remember { mutableStateOf<NutritionCalculator.DailyTargets?>(null) }
     var waterMl by remember { mutableStateOf(0) }
 
-    val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+    val today = SimpleDateFormat(DATE_FORMAT_ISO, Locale.US).format(Date())
     val langLocale = when(currentLang) {
         "en" -> Locale.ENGLISH; "fr" -> Locale.FRENCH; "zh" -> Locale.CHINESE
         "pt" -> Locale("pt"); else -> Locale("es")
     }
-    val dayOfWeek = SimpleDateFormat("EEEE", langLocale).format(Date())
+    val dayOfWeek = SimpleDateFormat(DATE_FORMAT_DAY, langLocale).format(Date())
         .replaceFirstChar { it.uppercase() }
-    val dateFormatted = SimpleDateFormat("d MMMM", langLocale).format(Date())
+    val dateFormatted = SimpleDateFormat(DATE_FORMAT_DISPLAY, langLocale).format(Date())
         .replaceFirstChar { it.uppercase() }
 
     LaunchedEffect(Unit) {
-        db.collection("users").document(uid).get()
+        db.collection(COLLECTION_USERS).document(uid).get()
             .addOnSuccessListener { doc ->
-                userXP = (doc.getLong("xp") ?: 0).toInt()
-                hasPlan = doc.getString("dietPlan")?.isNotEmpty() == true
-                val w = doc.getDouble("weight") ?: 70.0
-                val h = doc.getDouble("height") ?: 170.0
-                val a = (doc.getLong("age") ?: 25).toInt()
-                val act = doc.getString("activity") ?: "moderate"
-                val goal = doc.getString("goal") ?: "maintain_weight"
+                userXP = (doc.getLong(FIELD_XP) ?: 0).toInt()
+                hasPlan = doc.getString(FIELD_DIET_PLAN)?.isNotEmpty() == true
+                val w = doc.getDouble(FIELD_WEIGHT) ?: DEFAULT_WEIGHT
+                val h = doc.getDouble(FIELD_HEIGHT) ?: DEFAULT_HEIGHT
+                val a = (doc.getLong(FIELD_AGE) ?: DEFAULT_AGE).toInt()
+                val act = doc.getString(FIELD_ACTIVITY) ?: DEFAULT_ACTIVITY
+                val goal = doc.getString(FIELD_GOAL) ?: DEFAULT_GOAL
                 targets = NutritionCalculator.computeTargets(w, h, a, act, goal)
             }
 
-        db.collection("users").document(uid)
-            .collection("moods").document(today).get()
+        db.collection(COLLECTION_USERS).document(uid)
+            .collection(COLLECTION_MOODS).document(today).get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
-                    todayMood = doc.getString("mood") ?: ""
-                    todayMoodEmoji = doc.getString("emoji") ?: ""
-                    todayRecommendation = doc.getString("recommendation") ?: ""
+                    todayMood = doc.getString(FIELD_MOOD) ?: ""
+                    todayMoodEmoji = doc.getString(FIELD_EMOJI) ?: ""
+                    todayRecommendation = doc.getString(FIELD_RECOMMENDATION) ?: ""
                 }
             }
 
@@ -134,7 +157,7 @@ fun HomeScreen(
                 """.trimIndent()
                 dailyTip = callOpenAIWithHistory(prompt, emptyList())
             } catch (e: Exception) {
-                dailyTip = "💧 ${LanguageManager.t("daily_tip")}"
+                dailyTip = LanguageManager.t("daily_tip_error")
             }
             isLoadingTip = false
         }
@@ -146,82 +169,92 @@ fun HomeScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(drawerContainerColor = DeepBlue) {
-                Spacer(Modifier.height(48.dp))
-                Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
-                    Column {
-                        Box(
-                            modifier = Modifier.size(60.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Gold.copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) { Text("🌿", fontSize = 30.sp) }
-                        Spacer(Modifier.height(8.dp))
-                        Text("VitaAI", fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold, color = Gold)
-                        Text(user.email ?: "", fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.6f))
-                        Spacer(Modifier.height(4.dp))
-                        Text("${levelInfo.emoji} ${levelInfo.title} • $userXP XP",
-                            fontSize = 12.sp, color = Gold.copy(alpha = 0.8f))
+                // lo envolvemos en una Column con scroll para que sea accesible en pantallas pequeñas
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Spacer(Modifier.height(48.dp))
+                    Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+                        Column {
+                            Box(
+                                modifier = Modifier.size(60.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Gold.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("🌿", fontSize = 30.sp)
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text("VitaAI", fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold, color = Gold)
+                            Text(user.email ?: "", fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.6f))
+                            Spacer(Modifier.height(4.dp))
+                            Text("${levelInfo.emoji} ${levelInfo.title} • $userXP XP",
+                                fontSize = 12.sp, color = Gold.copy(alpha = 0.8f))
+                        }
                     }
-                }
 
-                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-                Spacer(Modifier.height(8.dp))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                    Spacer(Modifier.height(8.dp))
 
-                DrawerItem("🤖", LanguageManager.t("my_plan")) {
-                    scope.launch { drawerState.close() }; onGoQuestionnaire()
-                }
-                DrawerItem("🎯", LanguageManager.t("my_goals")) {
-                    scope.launch { drawerState.close() }; onGoGoals()
-                }
-                DrawerItem("📊", LanguageManager.t("my_progress")) {
-                    scope.launch { drawerState.close() }; onGoProgress()
-                }
-                DrawerItem("📈", LanguageManager.t("weekly_report")) {
-                    scope.launch { drawerState.close() }; onGoWeeklyReport()
-                }
-                DrawerItem("💬", LanguageManager.t("nutritionist_ia")) {
-                    scope.launch { drawerState.close() }; onGoChat()
-                }
-                DrawerItem("📸", LanguageManager.t("identify_food")) {
-                    scope.launch { drawerState.close() }; onGoCamera()
-                }
-                DrawerItem("🍽️", LanguageManager.t("food_history")) {
-                    scope.launch { drawerState.close() }; onGoFoodHistory()
-                }
-                DrawerItem("💧", LanguageManager.t("water_tracker")) {
-                    scope.launch { drawerState.close() }; onGoWater()
-                }
-                DrawerItem("🏋️", LanguageManager.t("exercise_log")) {
-                    scope.launch { drawerState.close() }; onGoExercise()
-                }
-                DrawerItem("🏆", LanguageManager.t("achievements")) {
-                    scope.launch { drawerState.close() }; onGoAchievements()
-                }
-                DrawerItem("⭐", LanguageManager.t("my_level")) {
-                    scope.launch { drawerState.close() }; onGoLevel()
-                }
-                DrawerItem("⚙️", LanguageManager.t("settings")) {
-                    scope.launch { drawerState.close() }; onGoSettings()
-                }
+                    DrawerItem("🤖", LanguageManager.t("my_plan")) {
+                        scope.launch { drawerState.close() }; onGoQuestionnaire()
+                    }
+                    DrawerItem("🎯", LanguageManager.t("my_goals")) {
+                        scope.launch { drawerState.close() }; onGoGoals()
+                    }
+                    DrawerItem("📊", LanguageManager.t("my_progress")) {
+                        scope.launch { drawerState.close() }; onGoProgress()
+                    }
+                    DrawerItem("📈", LanguageManager.t("weekly_report")) {
+                        scope.launch { drawerState.close() }; onGoWeeklyReport()
+                    }
+                    DrawerItem("💬", LanguageManager.t("nutritionist_ia")) {
+                        scope.launch { drawerState.close() }; onGoChat()
+                    }
+                    DrawerItem("📸", LanguageManager.t("identify_food")) {
+                        scope.launch { drawerState.close() }; onGoCamera()
+                    }
+                    DrawerItem("🍽️", LanguageManager.t("food_history")) {
+                        scope.launch { drawerState.close() }; onGoFoodHistory()
+                    }
+                    DrawerItem("💧", LanguageManager.t("water_tracker")) {
+                        scope.launch { drawerState.close() }; onGoWater()
+                    }
+                    DrawerItem("🏋️", LanguageManager.t("exercise_log")) {
+                        scope.launch { drawerState.close() }; onGoExercise()
+                    }
+                    DrawerItem("🏆", LanguageManager.t("achievements")) {
+                        scope.launch { drawerState.close() }; onGoAchievements()
+                    }
+                    DrawerItem("⭐", LanguageManager.t("my_level")) {
+                        scope.launch { drawerState.close() }; onGoLevel()
+                    }
+                    DrawerItem("⚙️", LanguageManager.t("settings")) {
+                        scope.launch { drawerState.close() }; onGoSettings()
+                    }
 
-                Spacer(Modifier.weight(1f))
-                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-                NavigationDrawerItem(
-                    label = { Text(LanguageManager.t("logout"),
-                        color = Color.White.copy(alpha = 0.6f)) },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        FirebaseAuth.getInstance().signOut()
-                        onLogout()
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(
-                        unselectedContainerColor = Color.Transparent
+                    // Cambiamos el weight(1f) por un espacio fijo o dinámico para evitar errores en Column scrollable
+                    Spacer(Modifier.height(24.dp))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                    NavigationDrawerItem(
+                        label = { Text(LanguageManager.t("logout"),
+                            color = Color.White.copy(alpha = 0.6f)) },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            FirebaseAuth.getInstance().signOut()
+                            onLogout()
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(
+                            unselectedContainerColor = Color.Transparent
+                        )
                     )
-                )
-                Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(24.dp))
+                }
             }
         }
     ) {
@@ -252,6 +285,7 @@ fun HomeScreen(
                                     .background(Gold.copy(alpha = 0.2f))
                                     .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
+                                // TODO: Emoji string, needs to be handled
                                 Text("🔥", fontSize = 16.sp)
                                 Spacer(Modifier.width(4.dp))
                                 Text("$streakCurrent", fontSize = 14.sp,
@@ -290,6 +324,7 @@ fun HomeScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // TODO: Emoji string from levelInfo, needs to be handled
                         Text(levelInfo.emoji, fontSize = 32.sp)
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -319,7 +354,7 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // === DASHBOARD NUTRICIONAL ===
+                // DASHBOARD NUTRICIONAL
                 if (targets != null) {
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -337,6 +372,7 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
+                                // TODO: Emoji strings in NutrientRings
                                 NutrientRing("🔥", totalsCalories, targets!!.calories, Gold)
                                 NutrientRing("💪", totalsProtein, targets!!.proteinG, Color(0xFF42A5F5))
                                 NutrientRing("🍞", totalsCarbs, targets!!.carbsG, Color(0xFFFFA726))
@@ -347,7 +383,7 @@ fun HomeScreen(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // === WATER CARD ===
+                // WATER CARD
                 if (targets != null) {
                     Card(
                         onClick = onGoWater,
@@ -361,6 +397,7 @@ fun HomeScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // TODO: Emoji string, needs to be handled
                             Text("💧", fontSize = 32.sp)
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
@@ -392,7 +429,7 @@ fun HomeScreen(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // === PLAN CARD ===
+                // PLAN CARD
                 Card(
                     onClick = onGoQuestionnaire,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -405,6 +442,7 @@ fun HomeScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // TODO: Emoji string, needs to be handled
                         Text("📋", fontSize = 28.sp)
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -435,6 +473,7 @@ fun HomeScreen(
                         Spacer(Modifier.height(8.dp))
                         if (todayMood.isNotEmpty()) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
+                                // TODO: Emoji string from todayMoodEmoji, needs to be handled
                                 Text(todayMoodEmoji, fontSize = 36.sp)
                                 Spacer(Modifier.width(12.dp))
                                 Column {
@@ -451,6 +490,7 @@ fun HomeScreen(
                             }
                         } else {
                             Row(verticalAlignment = Alignment.CenterVertically) {
+                                // TODO: Emoji string, needs to be handled
                                 Text("😊", fontSize = 36.sp)
                                 Spacer(Modifier.width(12.dp))
                                 Text(LanguageManager.t("how_are_you"),
@@ -502,6 +542,7 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // TODO: Emoji strings in QuickCards
                     QuickCard("📸", LanguageManager.t("identify_food"), Modifier.weight(1f), onGoCamera)
                     QuickCard("💬", LanguageManager.t("nutritionist_ia"), Modifier.weight(1f), onGoChat)
                     QuickCard("🏋️", LanguageManager.t("exercise_log"), Modifier.weight(1f), onGoExercise)
@@ -551,6 +592,7 @@ private fun NutrientRing(emoji: String, current: Int, target: Int, color: Color)
                     style = Stroke(width = stroke, cap = StrokeCap.Round)
                 )
             }
+            // TODO: Emoji string, needs to be handled
             Text(emoji, fontSize = 22.sp)
         }
         Spacer(Modifier.height(4.dp))
@@ -564,6 +606,7 @@ fun DrawerItem(emoji: String, title: String, onClick: () -> Unit) {
     NavigationDrawerItem(
         label = {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // TODO: Emoji string, needs to be handled
                 Text(emoji, fontSize = 20.sp)
                 Spacer(Modifier.width(12.dp))
                 Text(title, color = Color.White, fontSize = 15.sp)
@@ -592,6 +635,7 @@ fun QuickCard(emoji: String, title: String, modifier: Modifier, onClick: () -> U
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // TODO: Emoji string, needs to be handled
             Text(emoji, fontSize = 28.sp)
             Spacer(Modifier.height(4.dp))
             Text(title, fontSize = 11.sp,

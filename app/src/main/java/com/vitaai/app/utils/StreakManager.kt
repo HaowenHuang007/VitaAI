@@ -18,9 +18,9 @@ object StreakManager {
             val longest = (doc.getLong("streakLongest") ?: 0).toInt()
 
             val newCurrent = when {
+                lastDate.isEmpty() -> 1
                 lastDate == today -> current
                 DateUtils.isYesterday(lastDate) -> current + 1
-                lastDate.isEmpty() -> 1
                 else -> 1
             }
             val newLongest = maxOf(longest, newCurrent)

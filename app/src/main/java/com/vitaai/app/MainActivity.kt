@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -22,9 +23,7 @@ import com.vitaai.app.screen.*
 import com.vitaai.app.ui.theme.VitaAITheme
 import com.vitaai.app.ui.theme.NavyBlue
 import com.vitaai.app.ui.theme.Gold
-import com.vitaai.app.utils.LanguageManager
-import com.vitaai.app.utils.NotificationScheduler
-import com.vitaai.app.utils.ThemeManager
+import com.vitaai.app.utils.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -36,10 +35,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             VitaAITheme {
-                // Observar cambios de idioma para recomponer
                 val currentLang by LanguageManager.currentLanguage
+                val context = LocalContext.current
+
+                val startDestination = remember {
+                    if (FirebaseAuth.getInstance().currentUser != null) "home" else "login"
+                }
+                
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "login") {
+                NavHost(navController = navController, startDestination = startDestination) {
 
                     composable("login") {
                         LoginScreen(
@@ -67,19 +71,39 @@ class MainActivity : ComponentActivity() {
                         val db = FirebaseFirestore.getInstance()
                         val uid = FirebaseAuth.getInstance().currentUser?.uid
                         var checkedMood by rememberSaveable { mutableStateOf(false) }
-                        LaunchedEffect(Unit) {
+                        
+                        LaunchedEffect(uid) {
                             if (uid != null && !checkedMood) {
-                                val today = java.text.SimpleDateFormat("yyyy-MM-dd",
-                                    java.util.Locale.getDefault()).format(java.util.Date())
+                                // 1. Comprobar cache local (rápido)
+                                if (MoodManager.isMoodSetToday(context)) {
+                                    checkedMood = true
+                                    return@LaunchedEffect
+                                }
+
+                                // 2. Sincronización con Firestore (si no hay cache local)
+                                val today = DateUtils.todayKey()
                                 db.collection("users").document(uid)
                                     .collection("moods").document(today)
                                     .get()
                                     .addOnSuccessListener { doc ->
+                                        if (doc.exists()) {
+                                            // Sincronizamos los datos al cache local
+                                            val label = doc.getString("mood") ?: ""
+                                            val emoji = doc.getString("emoji") ?: ""
+                                            val rec = doc.getString("recommendation") ?: ""
+                                            MoodManager.saveMoodLocally(context, label, emoji, rec)
+                                        } else {
+                                            // Solo si no existe en ningún lado, vamos a preguntar
+                                            navController.navigate("mood")
+                                        }
                                         checkedMood = true
-                                        if (!doc.exists()) navController.navigate("mood")
+                                    }
+                                    .addOnFailureListener {
+                                        checkedMood = true
                                     }
                             }
                         }
+                        
                         HomeScreen(
                             onGoQuestionnaire = { navController.navigate("questionnaire") },
                             onGoProgress = { navController.navigate("progress") },
@@ -191,6 +215,11 @@ class MainActivity : ComponentActivity() {
                             topBar = {
                                 TopAppBar(
                                     title = { Text(LanguageManager.t("how_are_you"), color = Color.White) },
+                                    navigationIcon = {
+                                        IconButton(onClick = { navController.popBackStack() }) {
+                                            Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)
+                                        }
+                                    },
                                     colors = TopAppBarDefaults.topAppBarColors(containerColor = NavyBlue)
                                 )
                             }
@@ -198,9 +227,7 @@ class MainActivity : ComponentActivity() {
                             MoodScreen(
                                 modifier = Modifier.padding(padding),
                                 onDone = {
-                                    navController.navigate("home") {
-                                        popUpTo("mood") { inclusive = true }
-                                    }
+                                    navController.popBackStack()
                                 }
                             )
                         }

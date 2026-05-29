@@ -2,4 +2,206 @@
 <resources>
     <string name="app_name">VitaAI</string>
     <string name="default_web_client_id">210018805867-64hejti4qh5pggqtnjjh8elqbggc8sj0.apps.googleusercontent.com</string>
+
+    <!-- Common -->
+    <string name="common_email">Email</string>
+    <string name="common_password">Contraseña</string>
+    <string name="common_next">Siguiente</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_verify">Verificar</string>
+    <string name="common_close">Cerrar</string>
+    <string name="common_or">o</string>
+    <string name="common_error_generic">Error: %1$s</string>
+    <string name="common_google">Google</string>
+    <string name="common_xp_reward">+%1$d</string>
+    <string name="common_saved">Guardado</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_kcal_unit">kcal</string>
+    <string name="common_g_unit">g</string>
+    <string name="common_ml_unit">ml</string>
+    <string name="common_kg_unit">kg</string>
+    <string name="common_now">Ahora</string>
+    <string name="common_start">Inicio</string>
+
+    <!-- Login Screen -->
+    <string name="login_tagline">Tu asistente de salud inteligente</string>
+    <string name="login_title">Iniciar sesión</string>
+    <string name="login_google_button">Continuar con Google</string>
+    <string name="login_forgot_password_link">¿Olvidaste tu contraseña?</string>
+    <string name="login_error_invalid_credentials">Email o contraseña incorrectos</string>
+    <string name="login_go_to_register">¿No tienes cuenta? Regístrate</string>
+
+    <!-- Forgot Password Dialogs -->
+    <string name="login_forgot_password_title">Recuperar contraseña</string>
+    <string name="login_forgot_password_desc">Introduce tu email registrado</string>
+    <string name="login_error_no_account">No existe cuenta con ese email</string>
+    <string name="login_error_search_account">Error al buscar cuenta</string>
+    <string name="login_security_question_title">Pregunta de seguridad</string>
+    <string name="login_security_answer_label">Tu respuesta</string>
+    <string name="login_email_sent_success">Email enviado a %1$s</string>
+    <string name="login_error_send_email">Error al enviar email</string>
+    <string name="login_error_wrong_answer">Respuesta incorrecta</string>
+    <string name="login_error_create_profile">Error al crear perfil: %1$s</string>
+    <string name="login_error_google_sign_in">Error de Google Sign In</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Crear cuenta</string>
+    <string name="register_tagline">Empieza tu camino saludable</string>
+    <string name="register_data_title">Tus datos</string>
+    <string name="register_username_label">Nombre de usuario</string>
+    <string name="register_security_question_section">Pregunta de seguridad</string>
+    <string name="register_security_question_desc">Para recuperar tu contraseña si la olvidas</string>
+    <string name="register_select_question_label">Selecciona una pregunta</string>
+    <string name="register_error_select_question">Selecciona una pregunta de seguridad</string>
+    <string name="register_error_empty_answer">Escribe tu respuesta de seguridad</string>
+    <string name="register_error_uid_null">Error: No se pudo obtener el ID de usuario</string>
+    <string name="register_error_save_profile">Error al guardar perfil: %1$s</string>
+    <string name="register_error_create_account">Error al crear cuenta: %1$s</string>
+    <string name="register_button">Registrarse</string>
+    <string name="register_go_to_login">¿Ya tienes cuenta? Inicia sesión</string>
+
+    <!-- Achievements Screen -->
+    <string name="achievements_title">Logros</string>
+    <string name="achievements_unlocked_label">Desbloqueados</string>
+    <string name="achievements_progress_format">%1$d / %2$d</string>
+
+    <string name="ach_first_plan_t">Primer plan</string>
+    <string name="ach_first_plan_d">Genera tu primer plan con IA</string>
+    <string name="ach_first_food_t">Primer escaneo</string>
+    <string name="ach_first_food_d">Identifica tu primer alimento</string>
+    <string name="ach_first_chat_t">Primera consulta</string>
+    <string name="ach_first_chat_d">Habla con el nutricionista IA</string>
+    <string name="ach_first_mood_t">Primer ánimo</string>
+    <string name="ach_first_mood_d">Registra cómo te sientes</string>
+    <string name="ach_first_water_t">Hidratación</string>
+    <string name="ach_first_water_d">Registra tu primer vaso de agua</string>
+    <string name="ach_first_exercise_t">Primer ejercicio</string>
+    <string name="ach_first_exercise_d">Registra una sesión de ejercicio</string>
+    <string name="ach_streak3_t">Racha de 3</string>
+    <string name="ach_streak3_d">3 días seguidos activo</string>
+    <string name="ach_streak7_t">Racha de 7</string>
+    <string name="ach_streak7_d">Una semana entera sin fallar</string>
+    <string name="ach_streak30_t">Racha de 30</string>
+    <string name="ach_streak30_d">30 días seguidos. Imparable</string>
+    <string name="ach_water_goal_t">Meta de agua</string>
+    <string name="ach_water_goal_d">Cumple tu meta diaria de agua</string>
+    <string name="ach_food10_t">10 comidas</string>
+    <string name="ach_food10_d">Escanea 10 alimentos</string>
+    <string name="ach_food50_t">50 comidas</string>
+    <string name="ach_food50_d">Escanea 50 alimentos</string>
+    <string name="ach_level3_t">Atleta</string>
+    <string name="ach_level3_d">Alcanza el nivel 3</string>
+    <string name="ach_level5_t">Maestro</string>
+    <string name="ach_level5_d">Alcanza el nivel máximo</string>
+    <string name="ach_goal_t">Meta alcanzada</string>
+    <string name="ach_goal_d">Llega a tu peso objetivo</string>
+
+    <!-- BMR Calculator Screen -->
+    <string name="bmr_calculator_title">Calculadora BMR</string>
+    <string name="bmi_label">IMC</string>
+    <string name="bmi_result_format">IMC: %1$.1f</string>
+    <string name="bmr_label">BMR</string>
+    <string name="bmr_unit_format">%1$d kcal</string>
+    <string name="tdee_label">TDEE</string>
+    <string name="recommended_targets_title">Objetivos recomendados</string>
+    <string name="calories_label">Calorías</string>
+    <string name="protein_label">Proteínas</string>
+    <string name="carbs_label">Carbohidratos</string>
+    <string name="fat_label">Grasas</string>
+    <string name="water_label">Agua</string>
+    <string name="gram_unit_format">%1$d g</string>
+    <string name="ml_unit_format">%1$d ml</string>
+    <string name="bmr_explain">Calorías en reposo</string>
+    <string name="tdee_explain">Gasto diario total</string>
+
+    <!-- Camera Screen -->
+    <string name="camera_point_at_food">Apunta al alimento</string>
+    <string name="camera_nutritional_analysis">Análisis nutricional</string>
+    <string name="camera_ai_result">Resultado de IA</string>
+    <string name="camera_save_to_log">Guardar en mi registro</string>
+    <string name="camera_take_another_photo">Tomar otra foto</string>
+    <string name="camera_permission_required">Se requiere acceso a la cámara para identificar alimentos</string>
+    <string name="camera_grant_permission">Conceder permiso</string>
+    <string name="camera_error_analyzing">Error al analizar</string>
+    <string name="camera_saved_xp_format">Guardado · +%1$d XP</string>
+    <string name="camera_saved_limit">Guardado (máximo diario alcanzado)</string>
+
+    <!-- Chat Screen -->
+    <string name="chat_ask_me">Pregúntame algo...</string>
+    <string name="chat_error">Lo siento, hubo un error. Por favor intenta de nuevo.</string>
+    <string name="chat_welcome_en">Hi! I\'m your personal AI nutritionist. I can help with food advice, analyze your meals and adjust your plan. How can I help you today?</string>
+    <string name="chat_welcome_es">¡Hola! Soy tu nutricionista personal IA. Puedo ayudarte con consejos de alimentación, analizar tus comidas y ajustar tu plan. ¿En qué te ayudo hoy?</string>
+
+    <!-- Exercise Screen -->
+    <string name="exercise_log_title">Registro de ejercicio</string>
+    <string name="exercise_choose">Elige un ejercicio</string>
+    <string name="exercise_duration_min">Duración (min)</string>
+    <string name="exercise_recent_history">Historial reciente</string>
+    <string name="exercise_approx_format">≈ %1$d kcal</string>
+    <string name="exercise_saved_format">Guardado · %1$d kcal</string>
+    <string name="exercise_history_item_format">%1$d min · %2$s</string>
+
+    <!-- Food History -->
+    <string name="food_history_title">Historial de comidas</string>
+    <string name="food_history_no_data">Aún no has registrado comidas</string>
+    <string name="food_history_item_format">%1$d kcal · P%2$d · C%3$d · F%4$d</string>
+
+    <!-- Goals Screen -->
+    <string name="goals_title">Mis objetivos</string>
+    <string name="goals_current">Objetivo actual</string>
+    <string name="goals_days_left">Quedan %1$d días</string>
+    <string name="goals_now">Ahora</string>
+    <string name="goals_start">Inicio</string>
+    <string name="goals_set">Definir objetivo</string>
+    <string name="goals_target_weight">Peso objetivo (kg)</string>
+    <string name="goals_target_date_hint">Fecha objetivo (YYYY-MM-DD)</string>
+    <string name="goals_save_button">Guardar objetivo</string>
+    <string name="goals_weight_format">%1$.1f kg</string>
+
+    <!-- Level Screen -->
+    <string name="level_label">Nivel</string>
+    <string name="level_xp_to_next">Faltan %1$d XP para el siguiente nivel</string>
+    <string name="level_max_reached">¡Nivel máximo alcanzado!</string>
+    <string name="level_how_to_earn">Cómo ganar XP</string>
+    <string name="level_all_levels">Todos los niveles</string>
+    <string name="level_from_xp">Desde %1$d XP</string>
+    <string name="level_current_tag">ACTUAL</string>
+
+    <!-- Mood Screen -->
+    <string name="mood_how_are_you">¿Cómo te sientes hoy?</string>
+    <string name="mood_affects_nutrition">Tu estado de ánimo afecta tu nutrición</string>
+    <string name="mood_get_recommendation">Obtener recomendación personalizada</string>
+    <string name="mood_daily_tip">Consejo del día</string>
+    <string name="mood_understood">¡Entendido, vamos!</string>
+
+    <!-- Plan Adjust Screen -->
+    <string name="plan_adjust_title">Ajuste Inteligente de Plan</string>
+    <string name="plan_adjust_subtitle">La IA analiza tu progreso real y ajusta tu plan</string>
+    <string name="plan_adjust_recent">Tu progreso reciente</string>
+    <string name="plan_adjust_stat_start">Peso inicial</string>
+    <string name="plan_adjust_stat_current">Peso actual</string>
+    <string name="plan_adjust_stat_change">Cambio</string>
+    <string name="plan_adjust_avg_calories">Calorías promedio: %1$d kcal/día</string>
+    <string name="plan_adjust_goal_label">Objetivo: %1$s</string>
+    <string name="plan_adjust_analyzing">Analizando tu progreso...</string>
+    <string name="plan_adjust_analyze_button">Analizar y ajustar mi plan</string>
+    <string name="plan_adjust_analysis_label">Análisis de tu progreso</string>
+    <string name="plan_adjust_diet_label">Nuevo Plan de Dieta</string>
+    <string name="plan_adjust_exercise_label">Nuevo Plan de Ejercicio</string>
+    <string name="plan_adjust_save_button">Guardar nuevo plan</string>
+    <string name="plan_adjust_no_data">Aún no tienes datos de progreso</string>
+    <string name="plan_adjust_no_data_desc">Registra al menos unos días en \'Mi progreso\' para que la IA pueda ajustar tu plan</string>
+
+    <!-- Plan Screen -->
+    <string name="plan_summary_format">%1$d · %2$.1fkg · %3$.1fcm · IMC %4$s</string>
+    <string name="plan_generating">Analizando tu perfil y generando\ntu plan personalizado...</string>
+    <string name="plan_back_home">Volver al inicio</string>
+
+    <string-array name="security_questions">
+        <item>¿Cuál es el nombre de tu primera mascota?</item>
+        <item>¿En qué ciudad naciste?</item>
+        <item>¿Cuál es el apellido de tu madre?</item>
+        <item>¿Cuál fue el nombre de tu primera escuela?</item>
+        <item>¿Cuál es tu comida favorita?</item>
+    </string-array>
 </resources>
