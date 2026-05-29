@@ -9,19 +9,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.RoyalBlue
 import com.vitaai.app.utils.AchievementManager
-import com.vitaai.app.utils.LanguageManager
-import com.vitaai.app.utils.NutritionCalculator
 import com.vitaai.app.utils.StreakManager
 import com.vitaai.app.utils.WaterManager
 import com.vitaai.app.utils.XPManager
+
+private const val USERS_COLLECTION = "users"
+private const val FIELD_WEIGHT = "weight"
+private const val ACTION_WATER_GOAL = "water_goal"
+private const val ACHIEVEMENT_FIRST_WATER = "first_water"
+private const val ACHIEVEMENT_WATER_GOAL = "water_goal"
 
 @Composable
 fun WaterTrackerScreen(modifier: Modifier = Modifier) {
@@ -33,8 +40,8 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
     var goalUnlocked by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        db.collection("users").document(uid).get().addOnSuccessListener { doc ->
-            val w = doc.getDouble("weight") ?: 70.0
+        db.collection(USERS_COLLECTION).document(uid).get().addOnSuccessListener { doc ->
+            val w = doc.getDouble(FIELD_WEIGHT) ?: 70.0
             targetMl = (w * 35).toInt().coerceAtLeast(1500)
         }
         WaterManager.loadToday { totalMl = it }
@@ -46,14 +53,14 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
             StreakManager.recordActivity()
             if (newTotal >= targetMl && !goalUnlocked) {
                 goalUnlocked = true
-                AchievementManager.unlock("water_goal")
+                AchievementManager.unlock(ACHIEVEMENT_WATER_GOAL)
                 XPManager.addXPWithLimit(
                     amount = XPManager.XP_DAILY_LOG,
-                    actionKey = "water_goal",
+                    actionKey = ACTION_WATER_GOAL,
                     dailyLimit = 1
                 )
             }
-            AchievementManager.unlock("first_water")
+            AchievementManager.unlock(ACHIEVEMENT_FIRST_WATER)
         }
     }
 
@@ -64,14 +71,22 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(16.dp))
-        Text("💧", fontSize = 64.sp)
+        Icon(
+            imageVector = IconList.Water,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = IconList.WaterBlue
+        )
         Spacer(Modifier.height(8.dp))
-        Text(LanguageManager.t("water_tracker"), fontSize = 24.sp,
-            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(
+            text = stringResource(R.string.home_water_tracker),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
 
         Spacer(Modifier.height(24.dp))
 
-        // Progreso
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -81,10 +96,15 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("${totalMl} ml", fontSize = 48.sp,
-                    fontWeight = FontWeight.Bold, color = Color.White)
-                Text(LanguageManager.t("goal") + " ${targetMl} ml",
-                    fontSize = 13.sp, color = Color.White.copy(alpha = 0.7f))
+                Text(
+                    text = stringResource(R.string.water_ml_format, totalMl),
+                    fontSize = 48.sp,
+                    fontWeight = FontWeight.Bold, color = Color.White
+                )
+                Text(
+                    text = stringResource(R.string.water_goal_format, targetMl),
+                    fontSize = 13.sp, color = Color.White.copy(alpha = 0.7f)
+                )
                 Spacer(Modifier.height(16.dp))
                 Box(
                     modifier = Modifier.fillMaxWidth().height(12.dp)
@@ -100,17 +120,22 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
                     )
                 }
                 Spacer(Modifier.height(8.dp))
-                Text("${(progress * 100).toInt()}%",
+                Text(
+                    text = "${(progress * 100).toInt()}%",
                     fontSize = 14.sp, color = Color.White.copy(alpha = 0.9f),
-                    fontWeight = FontWeight.SemiBold)
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
 
         Spacer(Modifier.height(24.dp))
 
-        Text(LanguageManager.t("quick_add"), fontSize = 14.sp,
+        Text(
+            text = stringResource(R.string.water_quick_add),
+            fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+            modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start
+        )
         Spacer(Modifier.height(8.dp))
 
         Row(
@@ -123,7 +148,10 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.weight(1f).height(56.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("+${ml}ml", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = stringResource(R.string.water_ml_format, ml),
+                        fontSize = 14.sp, fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
@@ -135,7 +163,7 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(LanguageManager.t("reset_today"), fontSize = 14.sp)
+            Text(text = stringResource(R.string.water_reset_today), fontSize = 14.sp)
         }
     }
 }

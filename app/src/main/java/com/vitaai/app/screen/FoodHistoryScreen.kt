@@ -14,24 +14,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.vitaai.app.utils.LanguageManager
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private object FoodHistoryConstants {
-    const val USERS_COLLECTION = "users"
-    const val FOODLOG_COLLECTION = "foodlog"
-    const val FIELD_DATE = "date"
-    const val FIELD_TIMESTAMP = "timestamp"
-    const val UNIT_KCAL = " kcal"
-}
+private const val USERS_COLLECTION = "users"
+private const val FOODLOG_COLLECTION = "foodlog"
+private const val FIELD_DATE = "date"
+private const val FIELD_TIMESTAMP = "timestamp"
 
 data class FoodEntry(
     val id: String,
@@ -49,12 +48,12 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
     val db = FirebaseFirestore.getInstance()
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     
-    // Ítem por defecto para mostrar al cliente inmediatamente
     val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    val defaultItemName = stringResource(R.string.food_history_default_item)
     val defaultItem = FoodEntry(
         id = "mock_1",
         date = today,
-        name = "Salmón con Espárragos",
+        name = defaultItemName,
         calories = 420,
         proteinG = 35,
         carbsG = 8,
@@ -67,14 +66,14 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
 
     LaunchedEffect(uid) {
         if (uid.isBlank()) return@LaunchedEffect
-        db.collection(FoodHistoryConstants.USERS_COLLECTION).document(uid)
-            .collection(FoodHistoryConstants.FOODLOG_COLLECTION)
-            .orderBy(FoodHistoryConstants.FIELD_TIMESTAMP, Query.Direction.DESCENDING)
+        db.collection(USERS_COLLECTION).document(uid)
+            .collection(FOODLOG_COLLECTION)
+            .orderBy(FIELD_TIMESTAMP, Query.Direction.DESCENDING)
             .addSnapshotListener { snap, _ ->
                 val firestoreEntries = snap?.documents?.map { d ->
                     FoodEntry(
                         id = d.id,
-                        date = d.getString(FoodHistoryConstants.FIELD_DATE) ?: "",
+                        date = d.getString(FIELD_DATE) ?: "",
                         name = d.getString("name") ?: "",
                         calories = (d.getLong("calories") ?: 0).toInt(),
                         proteinG = (d.getLong("proteinG") ?: 0).toInt(),
@@ -84,7 +83,6 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
                     )
                 } ?: emptyList()
                 
-                // Siempre mantenemos el default item al principio para la demo
                 entries = listOf(defaultItem) + firestoreEntries
                 isLoading = false
             }
@@ -94,13 +92,28 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
 
     Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(16.dp))
-        Text(
-            text = LanguageManager.t("food_history"),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = IconList.History,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.food_history_title),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
         Spacer(Modifier.height(12.dp))
+
+        if (entries.isEmpty() && !isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.food_history_no_data), color = MaterialTheme.colorScheme.outline)
+            }
+        }
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -136,7 +149,6 @@ fun FoodHistoryItem(entry: FoodEntry) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Semáforo profesional (Verde para healthy)
             Box(
                 modifier = Modifier
                     .size(12.dp)
@@ -149,18 +161,27 @@ fun FoodHistoryItem(entry: FoodEntry) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(entry.name, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Text(
-                    text = "${entry.calories}${FoodHistoryConstants.UNIT_KCAL}  ·  P: ${entry.proteinG}g  C: ${entry.carbsG}g  G: ${entry.fatG}g",
+                    text = stringResource(
+                        R.string.food_history_item_macros_format,
+                        entry.calories,
+                        stringResource(R.string.common_kcal_unit),
+                        entry.proteinG,
+                        entry.carbsG,
+                        entry.fatG
+                    ),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.outline
                 )
             }
 
-            Icon(
-                Icons.Default.Delete,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                modifier = Modifier.size(20.dp)
-            )
+            IconButton(onClick = { /* Lógica de borrado si se requiere */ }) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.common_delete),
+                    tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }

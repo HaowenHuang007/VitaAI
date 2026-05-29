@@ -13,12 +13,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
 import com.vitaai.app.utils.LanguageManager
@@ -34,9 +37,9 @@ fun SettingsScreen(
     val user = auth.currentUser
     val context = LocalContext.current
 
-    var currentPassword by remember { mutableStateOf("") }
-    var newPassword by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    var currentPasswordInput by remember { mutableStateOf("") }
+    var newPasswordInput by remember { mutableStateOf("") }
+    var confirmPasswordInput by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var successMsg by remember { mutableStateOf("") }
     var errorMsg by remember { mutableStateOf("") }
@@ -60,10 +63,13 @@ fun SettingsScreen(
         // Info usuario
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("👤 ${LanguageManager.t("my_account")}",
-                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(IconList.Profile, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.settings_my_account), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(8.dp))
-                Text("Email: ${user?.email ?: ""}", fontSize = 14.sp,
+                Text("${stringResource(R.string.common_email)}: ${user?.email ?: ""}", fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.outline)
             }
         }
@@ -73,20 +79,20 @@ fun SettingsScreen(
         // Selector de idioma
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("🌍 ${LanguageManager.t("select_language")}",
-                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(IconList.Language, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.settings_select_language), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(16.dp))
 
-                LanguageManager.languages.forEach { (code, flag, name) ->
+                LanguageManager.languages.forEach { (code, _, name) ->
                     val isSelected = currentLang == code
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isSelected) NavyBlue.copy(alpha = 0.1f)
-                                else Color.Transparent
-                            )
+                            .background(if (isSelected) NavyBlue.copy(alpha = 0.1f) else Color.Transparent)
                             .clickable {
                                 LanguageManager.setLanguage(context, code)
                                 val intent = (context as android.app.Activity).intent
@@ -96,15 +102,12 @@ fun SettingsScreen(
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(flag, fontSize = 24.sp)
-                        Spacer(Modifier.width(12.dp))
                         Text(name, fontSize = 15.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             color = if (isSelected) NavyBlue else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f))
                         if (isSelected) {
-                            Text("✓", fontSize = 18.sp, color = Gold,
-                                fontWeight = FontWeight.Bold)
+                            Icon(IconList.Done, null, tint = Gold, modifier = Modifier.size(20.dp))
                         }
                     }
                     if (code != LanguageManager.languages.last().first) {
@@ -119,14 +122,17 @@ fun SettingsScreen(
         // ===== TEMA =====
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("🎨 ${LanguageManager.t("theme")}",
-                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(IconList.Settings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.settings_theme), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(12.dp))
                 listOf(
-                    ThemeManager.MODE_SYSTEM to "theme_system",
-                    ThemeManager.MODE_LIGHT to "theme_light",
-                    ThemeManager.MODE_DARK to "theme_dark"
-                ).forEach { (mode, key) ->
+                    ThemeManager.MODE_SYSTEM to R.string.settings_theme_system,
+                    ThemeManager.MODE_LIGHT to R.string.settings_theme_light,
+                    ThemeManager.MODE_DARK to R.string.settings_theme_dark
+                ).forEach { (mode, resId) ->
                     val isSel = themeMode == mode
                     Row(
                         modifier = Modifier.fillMaxWidth()
@@ -136,17 +142,22 @@ fun SettingsScreen(
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(when (mode) {
-                            ThemeManager.MODE_LIGHT -> "☀️"
-                            ThemeManager.MODE_DARK -> "🌙"
-                            else -> "⚙️"
-                        }, fontSize = 22.sp)
+                        Icon(
+                            imageVector = when (mode) {
+                                ThemeManager.MODE_LIGHT -> IconList.LightMode
+                                ThemeManager.MODE_DARK -> IconList.DarkMode
+                                else -> IconList.SystemMode
+                            },
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = if (isSel) NavyBlue else MaterialTheme.colorScheme.onSurface
+                        )
                         Spacer(Modifier.width(12.dp))
-                        Text(LanguageManager.t(key), fontSize = 15.sp,
+                        Text(stringResource(resId), fontSize = 15.sp,
                             fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
                             color = if (isSel) NavyBlue else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f))
-                        if (isSel) Text("✓", fontSize = 18.sp, color = Gold, fontWeight = FontWeight.Bold)
+                        if (isSel) Icon(IconList.Done, null, tint = Gold, modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -157,13 +168,20 @@ fun SettingsScreen(
         // ===== NOTIFICACIONES =====
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("🔔 ${LanguageManager.t("notifications")}",
-                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(IconList.Notification, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.settings_notifications), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("💧 ${LanguageManager.t("notif_water_title")}", fontSize = 14.sp)
-                        Text(LanguageManager.t("notif_water_desc"),
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(IconList.Water, null, tint = IconList.WaterBlue, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(R.string.settings_notif_water_title), fontSize = 14.sp)
+                        }
+                        Text(stringResource(R.string.settings_notif_water_desc),
                             fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
                     }
                     Switch(checked = waterNotif, onCheckedChange = { enabled ->
@@ -175,8 +193,12 @@ fun SettingsScreen(
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("🌙 ${LanguageManager.t("notif_evening_title")}", fontSize = 14.sp)
-                        Text(LanguageManager.t("notif_evening_desc"),
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(IconList.DarkMode, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(R.string.settings_notif_evening_title), fontSize = 14.sp)
+                        }
+                        Text(stringResource(R.string.settings_notif_evening_desc),
                             fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
                     }
                     Switch(checked = eveningNotif, onCheckedChange = { enabled ->
@@ -198,15 +220,15 @@ fun SettingsScreen(
         ) {
             Row(modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("🧮", fontSize = 28.sp)
+                Icon(IconList.Calculate, null, modifier = Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(LanguageManager.t("bmr_calculator"),
+                    Text(stringResource(R.string.settings_bmr_calculator),
                         fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                    Text(LanguageManager.t("bmr_subtitle"),
+                    Text(stringResource(R.string.settings_bmr_subtitle),
                         fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
                 }
-                Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.outline)
+                Icon(IconList.Update, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.outline)
             }
         }
 
@@ -215,14 +237,17 @@ fun SettingsScreen(
         // Cambiar contraseña
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(LanguageManager.t("change_password"),
-                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(IconList.Lock, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.settings_change_password), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(16.dp))
 
                 OutlinedTextField(
-                    value = currentPassword,
-                    onValueChange = { currentPassword = it },
-                    label = { Text(LanguageManager.t("current_password")) },
+                    value = currentPasswordInput,
+                    onValueChange = { currentPasswordInput = it },
+                    label = { Text(stringResource(R.string.settings_current_password)) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -230,9 +255,9 @@ fun SettingsScreen(
                 )
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
-                    value = newPassword,
-                    onValueChange = { newPassword = it },
-                    label = { Text(LanguageManager.t("new_password")) },
+                    value = newPasswordInput,
+                    onValueChange = { newPasswordInput = it },
+                    label = { Text(stringResource(R.string.settings_new_password)) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -240,9 +265,9 @@ fun SettingsScreen(
                 )
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
-                    value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
-                    label = { Text(LanguageManager.t("confirm_password")) },
+                    value = confirmPasswordInput,
+                    onValueChange = { confirmPasswordInput = it },
+                    label = { Text(stringResource(R.string.settings_confirm_password)) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -265,50 +290,47 @@ fun SettingsScreen(
                     onClick = {
                         errorMsg = ""
                         successMsg = ""
-                        if (newPassword != confirmPassword) {
-                            errorMsg = LanguageManager.t("pwd_no_match")
+                        if (newPasswordInput != confirmPasswordInput) {
+                            errorMsg = context.getString(R.string.settings_pwd_no_match)
                             return@Button
                         }
-                        if (newPassword.length < 6) {
-                            errorMsg = LanguageManager.t("pwd_too_short")
+                        if (newPasswordInput.length < 6) {
+                            errorMsg = context.getString(R.string.settings_pwd_too_short)
                             return@Button
                         }
                         isLoading = true
-                        val credential = EmailAuthProvider.getCredential(
-                            user?.email ?: "", currentPassword
-                        )
+                        val credential = EmailAuthProvider.getCredential(user?.email ?: "", currentPasswordInput)
                         user?.reauthenticate(credential)
                             ?.addOnSuccessListener {
-                                user.updatePassword(newPassword)
+                                user.updatePassword(newPasswordInput)
                                     .addOnSuccessListener {
-                                        successMsg = "✅ ${LanguageManager.t("update_password")} OK"
-                                        currentPassword = ""
-                                        newPassword = ""
-                                        confirmPassword = ""
+                                        successMsg = context.getString(R.string.settings_update_password_success)
+                                        currentPasswordInput = ""
+                                        newPasswordInput = ""
+                                        confirmPasswordInput = ""
                                         isLoading = false
                                     }
                                     .addOnFailureListener {
-                                        errorMsg = LanguageManager.t("pwd_update_failed")
+                                        errorMsg = context.getString(R.string.settings_pwd_update_failed)
                                         isLoading = false
                                     }
                             }
                             ?.addOnFailureListener {
-                                errorMsg = LanguageManager.t("pwd_wrong_current")
+                                errorMsg = context.getString(R.string.settings_pwd_wrong_current)
                                 isLoading = false
                             }
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp),
-                    enabled = !isLoading && currentPassword.isNotEmpty()
-                            && newPassword.isNotEmpty() && confirmPassword.isNotEmpty(),
+                    enabled = !isLoading && currentPasswordInput.isNotEmpty()
+                            && newPasswordInput.isNotEmpty() && confirmPasswordInput.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = NavyBlue)
                 ) {
                     if (isLoading) CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         color = Color.White, strokeWidth = 2.dp
                     )
-                    else Text(LanguageManager.t("update_password"), fontSize = 16.sp,
-                        color = Color.White)
+                    else Text(stringResource(R.string.settings_update_password), fontSize = 16.sp, color = Color.White)
                 }
             }
         }

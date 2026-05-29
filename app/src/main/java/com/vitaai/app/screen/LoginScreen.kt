@@ -30,6 +30,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
@@ -121,7 +122,13 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
     if (showForgotStep1) {
         AlertDialog(
             onDismissRequest = { showForgotStep1 = false; forgotMsg = ""; forgotEmail = "" },
-            title = { Text(stringResource(R.string.login_forgot_password_title), fontWeight = FontWeight.Bold) },
+            title = { 
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = IconList.Lock, contentDescription = null, tint = NavyBlue, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.login_forgot_password_title), fontWeight = FontWeight.Bold)
+                }
+            },
             text = {
                 Column {
                     Text(stringResource(R.string.login_forgot_password_desc),
@@ -192,7 +199,13 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                 forgotMsg = ""
                 isEmailSentSuccess = false
             },
-            title = { Text(stringResource(R.string.login_security_question_title), fontWeight = FontWeight.Bold) },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = IconList.Info, contentDescription = null, tint = DeepBlue, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.login_security_question_title), fontWeight = FontWeight.Bold)
+                }
+            },
             text = {
                 Column {
                     Text(securityQuestion, fontSize = 14.sp,
@@ -273,8 +286,12 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                     .background(Gold.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) { 
-                // TODO: Emoji string
-                Text("🌿", fontSize = 48.sp) 
+                Icon(
+                    imageVector = IconList.Logo,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp),
+                    tint = IconList.PlantGreen
+                )
             }
 
             Spacer(Modifier.height(20.dp))

@@ -18,6 +18,20 @@ object IconList {
     val TargetRed = Color(0xFFF44336)
     val CameraGrey = Color(0xFF9E9E9E)
     val RobotTeal = Color(0xFF009688)
+    val ProteinPurple = Color(0xFF9C27B0)
+    val CarbsOrange = Color(0xFFFF9800)
+    val FatYellow = Color(0xFFFFC107)
+    val BoltYellow = Color(0xFFFFEB3B)
+
+    // Mood Colors
+    val MoodGreat = Color(0xFF4CAF50)
+    val MoodGood = Color(0xFF8BC34A)
+    val MoodNormal = Color(0xFF9E9E9E)
+    val MoodSad = Color(0xFF2196F3)
+    val MoodStressed = Color(0xFFFF9800)
+    val MoodTired = Color(0xFF673AB7)
+    val MoodIrritable = Color(0xFFF44336)
+    val MoodUnwell = Color(0xFF009688)
 
     fun getIconForAchievement(id: String): ImageVector {
         return when (id) {
@@ -52,9 +66,62 @@ object IconList {
         }
     }
 
+    fun getIconForMood(moodId: String): ImageVector {
+        return when (moodId) {
+            "great" -> Icons.Filled.SentimentVerySatisfied
+            "good" -> Icons.Filled.SentimentSatisfied
+            "normal" -> Icons.Filled.SentimentNeutral
+            "sad" -> Icons.Filled.SentimentDissatisfied
+            "stressed" -> Icons.Filled.Psychology
+            "tired" -> Icons.Filled.Bedtime
+            "irritable" -> Icons.Filled.SentimentVeryDissatisfied
+            "unwell" -> Icons.Filled.Sick
+            else -> Icons.Filled.SentimentSatisfied
+        }
+    }
+
+    fun getColorForMood(moodId: String): Color {
+        return when (moodId) {
+            "great" -> MoodGreat
+            "good" -> MoodGood
+            "normal" -> MoodNormal
+            "sad" -> MoodSad
+            "stressed" -> MoodStressed
+            "tired" -> MoodTired
+            "irritable" -> MoodIrritable
+            "unwell" -> MoodUnwell
+            else -> Color.Gray
+        }
+    }
+
+    fun getIconForLevel(level: Int): ImageVector {
+        return when (level) {
+            5 -> Icons.Filled.WorkspacePremium
+            4 -> Icons.Filled.Star
+            3 -> Icons.Filled.FitnessCenter
+            2 -> Icons.Filled.Eco
+            else -> Icons.Filled.Grass
+        }
+    }
+
+    fun getIconForExercise(type: String): ImageVector {
+        return when (type) {
+            "walking" -> Icons.Filled.DirectionsWalk
+            "running" -> Icons.Filled.DirectionsRun
+            "cycling" -> Icons.Filled.DirectionsBike
+            "swimming" -> Icons.Filled.Pool
+            "yoga" -> Icons.Filled.SelfImprovement
+            "gym" -> Icons.Filled.FitnessCenter
+            "dance" -> Icons.Filled.MusicNote
+            "hiit" -> Icons.Filled.Whatshot
+            else -> Icons.Filled.FitnessCenter
+        }
+    }
+
     // Common UI Icons
     val Plan = Icons.Filled.Assignment
     val Progress = Icons.Filled.TrendingUp
+    val WeeklyReport = Icons.Filled.Assessment
     val Nutritionist = Icons.Filled.SmartToy
     val IdentifyFood = Icons.Filled.CameraAlt
     val Level = Icons.Filled.BarChart
@@ -68,6 +135,7 @@ object IconList {
     val Language = Icons.Filled.Language
     val Lock = Icons.Filled.Lock
     val Send = Icons.Filled.Send
+    val Chat = Icons.Filled.Chat
     val Profile = Icons.Filled.Person
     val Goal = Icons.Filled.Flag
     val Activity = Icons.Filled.DirectionsRun
@@ -78,4 +146,21 @@ object IconList {
     val LightMode = Icons.Filled.LightMode
     val DarkMode = Icons.Filled.DarkMode
     val SystemMode = Icons.Filled.SettingsSuggest
+    val Tip = Icons.Filled.Lightbulb
+    val Mood = Icons.Filled.SentimentSatisfied
+    val Calculate = Icons.Filled.Calculate
+    val Scale = Icons.Filled.Scale
+    val Fire = Icons.Filled.Whatshot
+    val Bolt = Icons.Filled.Bolt
+    val Target = Icons.Filled.TrackChanges
+    val Protein = Icons.Filled.FitnessCenter
+    val Carbs = Icons.Filled.BakeryDining
+    val Fat = Icons.Filled.BakeryDining
+    val Search = Icons.Filled.Search
+    val Camera = Icons.Filled.PhotoCamera
+    val Info = Icons.Filled.Info
+    val Logo = Icons.Filled.Spa
+    val Email = Icons.Filled.Email
+    val Done = Icons.Filled.CheckCircle
+    val Error = Icons.Filled.Error
 }

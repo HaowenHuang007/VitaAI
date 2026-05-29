@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
@@ -73,8 +74,12 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                     .background(Gold.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) { 
-                // TODO: Emoji string, needs to be handled
-                Text("🌱", fontSize = 48.sp) 
+                Icon(
+                    imageVector = IconList.Logo,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp),
+                    tint = IconList.PlantGreen
+                )
             }
 
             Spacer(Modifier.height(20.dp))

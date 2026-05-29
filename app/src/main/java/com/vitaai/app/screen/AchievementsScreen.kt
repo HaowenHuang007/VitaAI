@@ -11,24 +11,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
 import com.vitaai.app.utils.AchievementManager
-import com.vitaai.app.utils.LanguageManager
-
-// Constants for UI styling
-private const val SCREEN_PADDING = 20
-private const val SPACING_SMALL = 8
-private const val SPACING_MEDIUM = 12
-private const val SPACING_LARGE = 16
-private const val SPACING_XLARGE = 32
-private const val CARD_CORNER_RADIUS = 20
-private const val ITEM_CORNER_RADIUS = 12
-private const val PROGRESS_BAR_HEIGHT = 10
-private const val PROGRESS_BAR_CORNER_RADIUS = 5
 
 @Composable
 fun AchievementsScreen(modifier: Modifier = Modifier) {
@@ -37,26 +29,30 @@ fun AchievementsScreen(modifier: Modifier = Modifier) {
 
     val all = AchievementManager.ALL
     val unlockedCount = all.count { it.id in unlocked }
+    val context = LocalContext.current
 
     Column(
-        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp)
     ) {
-        Spacer(Modifier.height(SPACING_SMALL.dp))
+        Spacer(Modifier.height(8.dp))
         Text(
-            text = LanguageManager.t("achievements"),
+            text = stringResource(R.string.achievements_title),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
-        Spacer(Modifier.height(SPACING_SMALL.dp))
+        Spacer(Modifier.height(8.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(CARD_CORNER_RADIUS.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = NavyBlue)
         ) {
             Column(
-                modifier = Modifier.padding(SCREEN_PADDING.dp),
+                modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -66,38 +62,45 @@ fun AchievementsScreen(modifier: Modifier = Modifier) {
                     color = Gold
                 )
                 Text(
-                    text = LanguageManager.t("unlocked"),
+                    text = stringResource(R.string.achievements_unlocked_label),
                     fontSize = 12.sp,
                     color = Color.White.copy(alpha = 0.7f)
                 )
-                Spacer(Modifier.height(SPACING_MEDIUM.dp))
+                Spacer(Modifier.height(12.dp))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(PROGRESS_BAR_HEIGHT.dp)
-                        .clip(RoundedCornerShape(PROGRESS_BAR_CORNER_RADIUS.dp))
+                        .height(10.dp)
+                        .clip(RoundedCornerShape(5.dp))
                         .background(Color.White.copy(alpha = 0.2f))
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(unlockedCount.toFloat() / all.size.toFloat())
+                            .fillMaxWidth(if (all.isNotEmpty()) unlockedCount.toFloat() / all.size.toFloat() else 0f)
                             .fillMaxHeight()
-                            .clip(RoundedCornerShape(PROGRESS_BAR_CORNER_RADIUS.dp))
+                            .clip(RoundedCornerShape(5.dp))
                             .background(Gold)
                     )
                 }
             }
         }
 
-        Spacer(Modifier.height(SPACING_LARGE.dp))
+        Spacer(Modifier.height(16.dp))
 
         all.forEach { ach ->
             val isUnlocked = ach.id in unlocked
+            
+            val titleResId = context.resources.getIdentifier(ach.titleKey, "string", context.packageName)
+            val descResId = context.resources.getIdentifier(ach.descKey, "string", context.packageName)
+            
+            val title = if (titleResId != 0) stringResource(titleResId) else ach.titleKey
+            val desc = if (descResId != 0) stringResource(descResId) else ach.descKey
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
-                shape = RoundedCornerShape(ITEM_CORNER_RADIUS.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isUnlocked)
                         MaterialTheme.colorScheme.primaryContainer
@@ -108,28 +111,29 @@ fun AchievementsScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // TODO: The following string contains or is primarily an emoji
-                    Text(
-                        text = if (isUnlocked) ach.emoji else "🔒",
-                        fontSize = 28.sp
+                    Icon(
+                        imageVector = if (isUnlocked) IconList.getIconForAchievement(ach.id) else IconList.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                        tint = if (isUnlocked) IconList.getColorForAchievement(ach.id) else MaterialTheme.colorScheme.outline
                     )
-                    Spacer(Modifier.width(SPACING_MEDIUM.dp))
+                    Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = LanguageManager.t(ach.titleKey),
+                            text = title,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isUnlocked) MaterialTheme.colorScheme.onSurface
                             else MaterialTheme.colorScheme.outline
                         )
                         Text(
-                            text = LanguageManager.t(ach.descKey),
+                            text = desc,
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.outline
                         )
                     }
                     Text(
-                        text = "+${ach.xpReward}",
+                        text = stringResource(R.string.common_xp_reward, ach.xpReward),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isUnlocked) Gold else MaterialTheme.colorScheme.outline
@@ -137,6 +141,6 @@ fun AchievementsScreen(modifier: Modifier = Modifier) {
                 }
             }
         }
-        Spacer(Modifier.height(SPACING_XLARGE.dp))
+        Spacer(Modifier.height(32.dp))
     }
 }

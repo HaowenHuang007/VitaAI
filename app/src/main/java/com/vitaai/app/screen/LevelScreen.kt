@@ -10,48 +10,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
-import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.XPManager
 
-private object LevelConstants {
-    const val USERS_COLLECTION = "users"
-    const val FIELD_XP = "xp"
-    const val FIELD_USERNAME = "username"
+private const val USERS_COLLECTION = "users"
+private const val FIELD_XP = "xp"
+private const val FIELD_USERNAME = "username"
 
-    const val LANG_LEVEL = "level"
-    const val LANG_XP_TO_NEXT = "xp_to_next"
-    const val LANG_MAX_LEVEL_REACHED = "max_level_reached"
-    const val LANG_HOW_TO_EARN_XP = "how_to_earn_xp"
-    const val LANG_XP_ACTION_PROGRESS = "xp_action_progress"
-    const val LANG_XP_ACTION_PLAN = "xp_action_plan"
-    const val LANG_XP_ACTION_FOOD = "xp_action_food"
-    const val LANG_XP_ACTION_CHAT = "xp_action_chat"
-    const val LANG_XP_ACTION_MOOD = "xp_action_mood"
-    const val LANG_ALL_LEVELS = "all_levels"
-    const val LANG_FROM_XP = "from_xp"
-    const val LANG_CURRENT = "current"
-
-    const val TEMPLATE_XP = "{xp}"
-    const val UNIT_XP = " XP"
-    const val PLUS_PREFIX = "+"
-    
-    const val LEVEL_BEGINNER = "level_beginner"
-    const val LEVEL_APPRENTICE = "level_apprentice"
-    const val LEVEL_ATHLETE = "level_athlete"
-    const val LEVEL_EXPERT = "level_expert"
-    const val LEVEL_MASTER = "level_master"
-}
+private const val UNIT_XP = " XP"
+private const val PLUS_PREFIX = "+"
 
 @Composable
 fun LevelScreen(modifier: Modifier = Modifier) {
@@ -62,29 +40,22 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     var username by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        db.collection(LevelConstants.USERS_COLLECTION).document(uid).get()
+        db.collection(USERS_COLLECTION).document(uid).get()
             .addOnSuccessListener { doc ->
-                xp = (doc.getLong(LevelConstants.FIELD_XP) ?: 0).toInt()
-                username = doc.getString(LevelConstants.FIELD_USERNAME) ?: ""
+                xp = (doc.getLong(FIELD_XP) ?: 0).toInt()
+                username = doc.getString(FIELD_USERNAME) ?: ""
             }
     }
 
     val levelInfo = XPManager.getLevelInfo(xp)
 
     val levels = listOf(
-        // TODO: This string is primarily an emoji
-        Triple(1, "🌱", LevelConstants.LEVEL_BEGINNER),
-        // TODO: This string is primarily an emoji
-        Triple(2, "🌿", LevelConstants.LEVEL_APPRENTICE),
-        // TODO: This string is primarily an emoji
-        Triple(3, "💪", LevelConstants.LEVEL_ATHLETE),
-        // TODO: This string is primarily an emoji
-        Triple(4, "⭐", LevelConstants.LEVEL_EXPERT),
-        // TODO: This string is primarily an emoji
-        Triple(5, "👑", LevelConstants.LEVEL_MASTER)
+        Triple(1, R.string.level_beginner, 0),
+        Triple(2, R.string.level_apprentice, 100),
+        Triple(3, R.string.level_athlete, 300),
+        Triple(4, R.string.level_expert, 600),
+        Triple(5, R.string.level_master, 1000)
     )
-
-    val xpThresholds = listOf(0, 100, 300, 600, 1000)
 
     Column(
         modifier = modifier
@@ -95,7 +66,6 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     ) {
         Spacer(Modifier.height(16.dp))
 
-        // Card nivel actual
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -105,29 +75,48 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(levelInfo.emoji, fontSize = 64.sp)
+                Icon(
+                    imageVector = IconList.getIconForLevel(levelInfo.level),
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = Gold
+                )
                 Spacer(Modifier.height(8.dp))
-                Text(levelInfo.title, fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold, color = Gold)
-                Text("${LanguageManager.t(LevelConstants.LANG_LEVEL)} ${levelInfo.level}", fontSize = 16.sp,
-                    color = Color.White.copy(alpha = 0.7f))
+                Text(
+                    text = stringResource(id = when(levelInfo.level) {
+                        5 -> R.string.level_master
+                        4 -> R.string.level_expert
+                        3 -> R.string.level_athlete
+                        2 -> R.string.level_apprentice
+                        else -> R.string.level_beginner
+                    }),
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Gold
+                )
+                Text(
+                    text = "${stringResource(R.string.level_label)} ${levelInfo.level}",
+                    fontSize = 16.sp,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
                 Spacer(Modifier.height(16.dp))
 
-                // XP total
-                Text("${levelInfo.currentXP}${LevelConstants.UNIT_XP}", fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    text = "${levelInfo.currentXP}$UNIT_XP",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
 
                 if (levelInfo.level < 5) {
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        LanguageManager.t(LevelConstants.LANG_XP_TO_NEXT).replace(
-                            LevelConstants.TEMPLATE_XP, (levelInfo.xpForNext - levelInfo.currentXP).toString()
-                        ),
-                        fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f)
+                        text = stringResource(R.string.level_xp_to_next, levelInfo.xpForNext - levelInfo.currentXP),
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.6f)
                     )
                     Spacer(Modifier.height(8.dp))
 
-                    // Barra de progreso
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -145,36 +134,35 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     }
                 } else {
                     Spacer(Modifier.height(8.dp))
-                    Text(LanguageManager.t(LevelConstants.LANG_MAX_LEVEL_REACHED),
-                        fontSize = 14.sp, color = Gold,
-                        fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = stringResource(R.string.level_max_reached),
+                        fontSize = 14.sp,
+                        color = Gold,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
 
         Spacer(Modifier.height(24.dp))
 
-        // Cómo ganar XP
-        // Emoji removed: 💡
-        Text(LanguageManager.t(LevelConstants.LANG_HOW_TO_EARN_XP), fontSize = 18.sp,
+        Text(
+            text = stringResource(R.string.level_how_to_earn),
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.primary
+        )
         Spacer(Modifier.height(12.dp))
 
         val xpActions = listOf(
-            // TODO: This string is primarily an emoji
-            Triple("📊", LanguageManager.t(LevelConstants.LANG_XP_ACTION_PROGRESS), "${LevelConstants.PLUS_PREFIX}${XPManager.XP_DAILY_LOG}${LevelConstants.UNIT_XP}"),
-            // TODO: This string is primarily an emoji
-            Triple("🤖", LanguageManager.t(LevelConstants.LANG_XP_ACTION_PLAN), "${LevelConstants.PLUS_PREFIX}${XPManager.XP_GENERATE_PLAN}${LevelConstants.UNIT_XP}"),
-            // TODO: This string is primarily an emoji
-            Triple("📸", LanguageManager.t(LevelConstants.LANG_XP_ACTION_FOOD), "${LevelConstants.PLUS_PREFIX}${XPManager.XP_FOOD_SCAN}${LevelConstants.UNIT_XP}"),
-            // TODO: This string is primarily an emoji
-            Triple("💬", LanguageManager.t(LevelConstants.LANG_XP_ACTION_CHAT), "${LevelConstants.PLUS_PREFIX}${XPManager.XP_CHAT_MESSAGE}${LevelConstants.UNIT_XP}"),
-            // TODO: This string is primarily an emoji
-            Triple("😊", LanguageManager.t(LevelConstants.LANG_XP_ACTION_MOOD), "${LevelConstants.PLUS_PREFIX}${XPManager.XP_MOOD_CHECK}${LevelConstants.UNIT_XP}")
+            Triple(IconList.Progress, R.string.level_xp_action_progress, XPManager.XP_DAILY_LOG),
+            Triple(IconList.Plan, R.string.level_xp_action_plan, XPManager.XP_GENERATE_PLAN),
+            Triple(IconList.Camera, R.string.level_xp_action_food, XPManager.XP_FOOD_SCAN),
+            Triple(IconList.Chat, R.string.level_xp_action_chat, XPManager.XP_CHAT_MESSAGE),
+            Triple(IconList.Mood, R.string.level_xp_action_mood, XPManager.XP_MOOD_CHECK)
         )
 
-        xpActions.forEach { (emoji, action, xpGain) ->
+        xpActions.forEach { (icon, actionRes, xpGain) ->
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 shape = RoundedCornerShape(12.dp)
@@ -183,30 +171,41 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // TODO: This string is primarily an emoji
-                    Text(emoji, fontSize = 24.sp)
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                     Spacer(Modifier.width(12.dp))
-                    Text(action, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                    Text(xpGain, fontSize = 14.sp,
+                    Text(
+                        text = stringResource(actionRes),
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "$PLUS_PREFIX$xpGain$UNIT_XP",
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Gold)
+                        color = Gold
+                    )
                 }
             }
         }
 
         Spacer(Modifier.height(24.dp))
 
-        // Todos los niveles
-        // Emoji removed: 🏆
-        Text(LanguageManager.t(LevelConstants.LANG_ALL_LEVELS), fontSize = 18.sp,
+        Text(
+            text = stringResource(R.string.level_all_levels),
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.primary
+        )
         Spacer(Modifier.height(12.dp))
 
-        levels.forEach { (level, emoji, titleKey) ->
+        levels.forEach { (level, titleResId, xpNeeded) ->
             val isUnlocked = levelInfo.level >= level
             val isCurrent = levelInfo.level == level
-            val xpNeeded = xpThresholds[level - 1]
 
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -223,18 +222,22 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // TODO: The following string contains or is primarily an emoji
-                    Text(if (isUnlocked) emoji else "🔒", fontSize = 28.sp)
+                    Icon(
+                        imageVector = if (isUnlocked) IconList.getIconForLevel(level) else IconList.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                        tint = if (isCurrent) Gold else if (isUnlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    )
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            LanguageManager.t(titleKey),
+                            text = stringResource(titleResId),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isCurrent) Gold else MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            LanguageManager.t(LevelConstants.LANG_FROM_XP).replace(LevelConstants.TEMPLATE_XP, xpNeeded.toString()),
+                            text = stringResource(R.string.level_from_xp, xpNeeded),
                             fontSize = 12.sp,
                             color = if (isCurrent) Color.White.copy(alpha = 0.6f)
                             else MaterialTheme.colorScheme.outline
@@ -247,8 +250,12 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                                 .background(Gold)
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
-                            Text(LanguageManager.t(LevelConstants.LANG_CURRENT), fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold, color = DeepBlue)
+                            Text(
+                                text = stringResource(R.string.level_current_tag),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = DeepBlue
+                            )
                         }
                     }
                 }

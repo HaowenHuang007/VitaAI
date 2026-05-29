@@ -12,6 +12,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -125,7 +126,7 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             topBar = {
                                 TopAppBar(
-                                    title = { Text(LanguageManager.t("my_plan"), color = Color.White) },
+                                    title = { Text(stringResource(R.string.home_my_plan), color = Color.White) },
                                     navigationIcon = {
                                         IconButton(onClick = { navController.popBackStack() }) {
                                             Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)
@@ -148,7 +149,7 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             topBar = {
                                 TopAppBar(
-                                    title = { Text(LanguageManager.t("current_plan"), color = Color.White) },
+                                    title = { Text(stringResource(R.string.plan_current_title), color = Color.White) },
                                     navigationIcon = {
                                         IconButton(onClick = { navController.popBackStack() }) {
                                             Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)
@@ -178,7 +179,7 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             topBar = {
                                 TopAppBar(
-                                    title = { Text(LanguageManager.t("my_progress"), color = Color.White) },
+                                    title = { Text(stringResource(R.string.progress_title), color = Color.White) },
                                     navigationIcon = {
                                         IconButton(onClick = { navController.popBackStack() }) {
                                             Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)
@@ -196,7 +197,7 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             topBar = {
                                 TopAppBar(
-                                    title = { Text(LanguageManager.t("nutritionist_ia"), color = Color.White) },
+                                    title = { Text(stringResource(R.string.home_nutritionist_ia), color = Color.White) },
                                     navigationIcon = {
                                         IconButton(onClick = { navController.popBackStack() }) {
                                             Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)
@@ -214,7 +215,7 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             topBar = {
                                 TopAppBar(
-                                    title = { Text(LanguageManager.t("how_are_you"), color = Color.White) },
+                                    title = { Text(stringResource(R.string.mood_how_are_you), color = Color.White) },
                                     navigationIcon = {
                                         IconButton(onClick = { navController.popBackStack() }) {
                                             Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)
@@ -237,7 +238,7 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             topBar = {
                                 TopAppBar(
-                                    title = { Text(LanguageManager.t("identify_food"), color = Color.White) },
+                                    title = { Text(stringResource(R.string.home_identify_food), color = Color.White) },
                                     navigationIcon = {
                                         IconButton(onClick = { navController.popBackStack() }) {
                                             Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)
@@ -255,7 +256,7 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             topBar = {
                                 TopAppBar(
-                                    title = { Text(LanguageManager.t("settings"), color = Color.White) },
+                                    title = { Text(stringResource(R.string.home_settings), color = Color.White) },
                                     navigationIcon = {
                                         IconButton(onClick = { navController.popBackStack() }) {
                                             Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)
@@ -273,37 +274,37 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("water") {
-                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("water_tracker")) }) { p ->
+                        Scaffold(topBar = { topBarWithBack(navController, stringResource(R.string.home_water_tracker)) }) { p ->
                             WaterTrackerScreen(modifier = Modifier.padding(p))
                         }
                     }
                     composable("foodhistory") {
-                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("food_history")) }) { p ->
+                        Scaffold(topBar = { topBarWithBack(navController, stringResource(R.string.food_history_title)) }) { p ->
                             FoodHistoryScreen(modifier = Modifier.padding(p))
                         }
                     }
                     composable("goals") {
-                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("my_goals")) }) { p ->
+                        Scaffold(topBar = { topBarWithBack(navController, stringResource(R.string.home_my_goals)) }) { p ->
                             GoalsScreen(modifier = Modifier.padding(p))
                         }
                     }
                     composable("achievements") {
-                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("achievements")) }) { p ->
+                        Scaffold(topBar = { topBarWithBack(navController, stringResource(R.string.home_achievements)) }) { p ->
                             AchievementsScreen(modifier = Modifier.padding(p))
                         }
                     }
                     composable("exercise") {
-                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("exercise_log")) }) { p ->
+                        Scaffold(topBar = { topBarWithBack(navController, stringResource(R.string.exercise_log_title)) }) { p ->
                             ExerciseScreen(modifier = Modifier.padding(p))
                         }
                     }
                     composable("weekly") {
-                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("weekly_report")) }) { p ->
+                        Scaffold(topBar = { topBarWithBack(navController, stringResource(R.string.report_title)) }) { p ->
                             WeeklyReportScreen(modifier = Modifier.padding(p))
                         }
                     }
                     composable("bmr") {
-                        Scaffold(topBar = { topBarWithBack(navController, LanguageManager.t("bmr_calculator")) }) { p ->
+                        Scaffold(topBar = { topBarWithBack(navController, stringResource(R.string.bmr_calculator_title)) }) { p ->
                             BMRCalculatorScreen(modifier = Modifier.padding(p))
                         }
                     }
@@ -312,7 +313,7 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             topBar = {
                                 TopAppBar(
-                                    title = { Text(LanguageManager.t("my_level"), color = Color.White) },
+                                    title = { Text(stringResource(R.string.home_my_level), color = Color.White) },
                                     navigationIcon = {
                                         IconButton(onClick = { navController.popBackStack() }) {
                                             Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)

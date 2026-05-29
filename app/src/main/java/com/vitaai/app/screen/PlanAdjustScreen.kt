@@ -8,13 +8,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.utils.callOpenAI
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 @Composable
 fun PlanAdjustScreen(modifier: Modifier = Modifier) {
@@ -29,17 +35,13 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
     var savedMsg by remember { mutableStateOf("") }
     var userGoal by remember { mutableStateOf("") }
     var progressData by remember { mutableStateOf<List<ProgressEntry>>(emptyList()) }
-    var initialWeight by remember { mutableStateOf(0.0) }
 
     LaunchedEffect(Unit) {
-        // Cargar perfil
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
                 userGoal = doc.getString("goal") ?: ""
-                initialWeight = doc.getDouble("weight") ?: 0.0
             }
 
-        // Cargar últimas 2 semanas de progreso
         db.collection("users").document(uid)
             .collection("progress")
             .orderBy("date")
@@ -60,24 +62,41 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(16.dp))
-        Text("📈 Ajuste Inteligente de Plan", fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(imageVector = IconList.Progress, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.plan_adjust_title),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
         Spacer(Modifier.height(8.dp))
-        Text("La IA analiza tu progreso real y ajusta tu plan",
-            fontSize = 14.sp, color = MaterialTheme.colorScheme.outline)
+        Text(
+            text = stringResource(R.string.plan_adjust_subtitle),
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.outline,
+            textAlign = TextAlign.Center
+        )
 
         Spacer(Modifier.height(24.dp))
 
-        // Resumen de progreso
         if (progressData.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("📊 Tu progreso reciente", fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = IconList.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.plan_adjust_recent),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                     Spacer(Modifier.height(12.dp))
 
                     val firstWeight = progressData.first().weight
@@ -89,20 +108,25 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        StatCard("Peso inicial", "${firstWeight}kg")
-                        StatCard("Peso actual", "${lastWeight}kg")
+                        StatCard(stringResource(R.string.plan_adjust_stat_start), "${firstWeight}kg")
+                        StatCard(stringResource(R.string.plan_adjust_stat_current), "${lastWeight}kg")
                         StatCard(
-                            "Cambio",
+                            stringResource(R.string.plan_adjust_stat_change),
                             "${if (weightChange >= 0) "+" else ""}${"%.1f".format(weightChange)}kg"
                         )
                     }
 
                     Spacer(Modifier.height(8.dp))
-                    Text("Calorías promedio: ${avgCalories.toInt()} kcal/día",
-                        fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+                    Text(
+                        text = stringResource(R.string.plan_adjust_avg_calories, avgCalories.toInt()),
+                        fontSize = 13.sp, color = MaterialTheme.colorScheme.outline
+                    )
                     Spacer(Modifier.height(4.dp))
-                    Text("Objetivo: $userGoal", fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.outline)
+                    Text(
+                        text = stringResource(R.string.plan_adjust_goal_label, userGoal),
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
             }
 
@@ -139,19 +163,15 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
                                   "diet": "nuevo plan de dieta ajustado y específico",
                                   "exercise": "nuevo plan de ejercicio ajustado y específico"
                                 }
-                                
-                                Si el progreso es bueno, mantén la dirección pero optimiza.
-                                Si el progreso es lento o negativo, cambia significativamente el enfoque.
                             """.trimIndent()
 
                             val result = callOpenAI(prompt)
-                            val json = org.json.JSONObject(result)
+                            val json = JSONObject(result)
                             analysis = json.getString("analysis")
                             newDietPlan = json.getString("diet")
                             newExercisePlan = json.getString("exercise")
-
                         } catch (e: Exception) {
-                            analysis = "Error al analizar: ${e.message}"
+                            analysis = "Error: ${e.message}"
                         }
                         isAnalyzing = false
                     }
@@ -163,26 +183,28 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
                 if (isAnalyzing) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     Spacer(Modifier.width(8.dp))
-                    Text("Analizando tu progreso...")
+                    Text(stringResource(R.string.plan_adjust_analyzing))
                 } else {
-                    Text("🤖 Analizar y ajustar mi plan", fontSize = 16.sp)
+                    Icon(imageVector = IconList.Nutritionist, contentDescription = null, tint = IconList.RobotTeal, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.plan_adjust_analyze_button), fontSize = 16.sp)
                 }
             }
 
             if (analysis.isNotEmpty()) {
                 Spacer(Modifier.height(20.dp))
 
-                // Análisis
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("🧠 Análisis de tu progreso", fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = IconList.Tip, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.plan_adjust_analysis_label), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        }
                         Spacer(Modifier.height(8.dp))
                         Text(analysis, fontSize = 14.sp, lineHeight = 22.sp)
                     }
@@ -190,17 +212,17 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
 
                 Spacer(Modifier.height(12.dp))
 
-                // Nuevo plan dieta
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("🥗 Nuevo Plan de Dieta", fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = IconList.Diet, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.plan_adjust_diet_label), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        }
                         Spacer(Modifier.height(8.dp))
                         Text(newDietPlan, fontSize = 14.sp, lineHeight = 22.sp)
                     }
@@ -208,17 +230,17 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
 
                 Spacer(Modifier.height(12.dp))
 
-                // Nuevo plan ejercicio
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                    )
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("💪 Nuevo Plan de Ejercicio", fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = IconList.Exercise, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.plan_adjust_exercise_label), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        }
                         Spacer(Modifier.height(8.dp))
                         Text(newExercisePlan, fontSize = 14.sp, lineHeight = 22.sp)
                     }
@@ -227,8 +249,7 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(16.dp))
 
                 if (savedMsg.isNotEmpty()) {
-                    Text(savedMsg, color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold)
+                    Text(savedMsg, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(8.dp))
                 }
 
@@ -240,13 +261,15 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
                                 "exercisePlan" to newExercisePlan
                             ))
                             .addOnSuccessListener {
-                                savedMsg = "✅ Plan actualizado en tu perfil"
+                                savedMsg = "Plan actualizado"
                             }
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("💾 Guardar nuevo plan", fontSize = 16.sp)
+                    Icon(imageVector = IconList.Save, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.plan_adjust_save_button), fontSize = 16.sp)
                 }
             }
 
@@ -254,13 +277,13 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
             Spacer(Modifier.height(48.dp))
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("📭", fontSize = 48.sp)
+                    Icon(imageVector = IconList.Info, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.outline)
                     Spacer(Modifier.height(16.dp))
-                    Text("Aún no tienes datos de progreso",
+                    Text(stringResource(R.string.plan_adjust_no_data),
                         fontSize = 16.sp, color = MaterialTheme.colorScheme.outline)
                     Spacer(Modifier.height(8.dp))
-                    Text("Registra al menos unos días en 'Mi progreso'\npara que la IA pueda ajustar tu plan",
-                        fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.plan_adjust_no_data_desc),
+                        fontSize = 13.sp, color = MaterialTheme.colorScheme.outline, textAlign = TextAlign.Center)
                 }
             }
         }
