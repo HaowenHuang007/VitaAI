@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,11 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
 import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.callOpenAI
 import kotlinx.coroutines.launch
@@ -89,7 +94,7 @@ fun ShoppingListScreen(modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) {
         loading = true
         try { generate() } catch (e: Exception) {
-            errorMsg = LanguageManager.t("chat_error") + ": ${e.message}"
+            errorMsg = context.getString(R.string.chat_error) + ": ${e.message}"
         }
         loading = false
     }
@@ -103,7 +108,7 @@ fun ShoppingListScreen(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("🛒 ${LanguageManager.t("shopping_list")}",
+                Text(stringResource(R.string.home_shopping_list),
                     fontSize = 24.sp, fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary)
                 if (items.isNotEmpty()) {
@@ -116,14 +121,14 @@ fun ShoppingListScreen(modifier: Modifier = Modifier) {
                     val text = items.joinToString("\n") { "• ${it.name} (${it.qty})" }
                     val clip = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     clip.setPrimaryClip(ClipData.newPlainText("Shopping list", text))
-                }) { Text("📋", fontSize = 22.sp) }
+                }) { Icon(Icons.Filled.ContentCopy, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
                 IconButton(onClick = {
                     val text = items.joinToString("\n") { "• ${it.name} (${it.qty})" }
                     val send = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text)
                     }
                     context.startActivity(Intent.createChooser(send, null))
-                }) { Text("📤", fontSize = 22.sp) }
+                }) { Icon(Icons.Filled.Share, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -133,7 +138,7 @@ fun ShoppingListScreen(modifier: Modifier = Modifier) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(12.dp))
-                    Text(LanguageManager.t("generating_list"),
+                    Text(stringResource(R.string.shopping_generating),
                         color = MaterialTheme.colorScheme.outline)
                 }
             }
@@ -141,7 +146,15 @@ fun ShoppingListScreen(modifier: Modifier = Modifier) {
             Text(errorMsg, color = MaterialTheme.colorScheme.error)
         } else {
             grouped.entries.sortedBy { it.key }.forEach { (cat, list) ->
-                Text(LanguageManager.t("shop_cat_$cat"),
+                val catRes = when (cat) {
+                    "produce" -> R.string.shop_cat_produce
+                    "protein" -> R.string.shop_cat_protein
+                    "dairy" -> R.string.shop_cat_dairy
+                    "grains" -> R.string.shop_cat_grains
+                    "pantry" -> R.string.shop_cat_pantry
+                    else -> R.string.shop_cat_other
+                }
+                Text(stringResource(catRes),
                     fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
@@ -188,14 +201,14 @@ fun ShoppingListScreen(modifier: Modifier = Modifier) {
                     loading = true; items = emptyList(); errorMsg = ""
                     scope.launch {
                         try { generate() } catch (e: Exception) {
-                            errorMsg = LanguageManager.t("chat_error") + ": ${e.message}"
+                            errorMsg = context.getString(R.string.chat_error) + ": ${e.message}"
                         }
                         loading = false
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp)
-            ) { Text(LanguageManager.t("regenerate"), fontSize = 14.sp) }
+            ) { Text(stringResource(R.string.common_regenerate), fontSize = 14.sp) }
             Spacer(Modifier.height(32.dp))
         }
     }

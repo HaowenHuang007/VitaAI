@@ -15,9 +15,7 @@ object XPManager {
         val currentXP: Int,
         val xpForNext: Int,
         val progress: Float
-    ) {
-        val title: String get() = LanguageManager.t(titleKey)
-    }
+    )
 
     fun getLevelInfo(xp: Int): LevelInfo {
         return when {

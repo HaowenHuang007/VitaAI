@@ -4,15 +4,26 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cookie
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.WbTwilight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
+import com.vitaai.app.utils.DateUtils
 import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.NutritionCalculator
 import com.vitaai.app.utils.NutritionLog
@@ -33,6 +44,7 @@ private data class MealSuggestion(
 @Composable
 fun MealPlannerScreen(modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
@@ -61,7 +73,7 @@ fun MealPlannerScreen(modifier: Modifier = Modifier) {
         targets = t
         val nutritionDoc = try {
             db.collection("users").document(uid)
-                .collection("nutrition").document(com.vitaai.app.utils.DateUtils.todayKey())
+                .collection("nutrition").document(DateUtils.todayKey())
                 .get().await()
         } catch (e: Exception) { null }
         val current = NutritionLog.DailyTotals(
@@ -114,7 +126,7 @@ fun MealPlannerScreen(modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) {
         isLoading = true
         try { generate() } catch (e: Exception) {
-            errorMsg = LanguageManager.t("chat_error") + ": ${e.message}"
+            errorMsg = context.getString(R.string.chat_error) + ": ${e.message}"
         }
         isLoading = false
     }
@@ -123,10 +135,15 @@ fun MealPlannerScreen(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)
     ) {
         Spacer(Modifier.height(8.dp))
-        Text("🍳 ${LanguageManager.t("meal_planner")}", fontSize = 24.sp,
-            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(IconList.MealPlanner, contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.home_meal_planner), fontSize = 24.sp,
+                fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        }
         Spacer(Modifier.height(4.dp))
-        Text(LanguageManager.t("meal_planner_subtitle"),
+        Text(stringResource(R.string.meal_planner_subtitle),
             fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
         Spacer(Modifier.height(16.dp))
 
@@ -136,7 +153,7 @@ fun MealPlannerScreen(modifier: Modifier = Modifier) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(12.dp))
-                    Text(LanguageManager.t("generating_meals"),
+                    Text(stringResource(R.string.meal_generating),
                         color = MaterialTheme.colorScheme.outline)
                 }
             }
@@ -144,18 +161,22 @@ fun MealPlannerScreen(modifier: Modifier = Modifier) {
             Text(errorMsg, color = MaterialTheme.colorScheme.error)
         } else {
             listOf(
-                "🌅" to ("breakfast" to breakfast),
-                "🌞" to ("lunch" to lunch),
-                "🌙" to ("dinner" to dinner),
-                "🍪" to ("snack" to snack)
-            ).forEach { (emoji, pair) ->
-                val (key, meal) = pair
+                Triple(Icons.Filled.WbTwilight, "breakfast", breakfast),
+                Triple(Icons.Filled.WbSunny, "lunch", lunch),
+                Triple(Icons.Filled.NightsStay, "dinner", dinner),
+                Triple(Icons.Filled.Cookie, "snack", snack)
+            ).forEach { (icon, key, meal) ->
                 if (meal != null) {
-                    MealCard(emoji, LanguageManager.t("meal_$key"), meal) {
-                        // log this meal
+                    val titleRes = when (key) {
+                        "breakfast" -> R.string.meal_breakfast
+                        "lunch" -> R.string.meal_lunch
+                        "dinner" -> R.string.meal_dinner
+                        else -> R.string.meal_snack
+                    }
+                    MealCard(icon, stringResource(titleRes), meal) {
                         db.collection("users").document(uid).collection("foodlog")
                             .add(mapOf(
-                                "date" to com.vitaai.app.utils.DateUtils.todayKey(),
+                                "date" to DateUtils.todayKey(),
                                 "name" to meal.name,
                                 "calories" to meal.calories,
                                 "proteinG" to meal.proteinG,
@@ -179,14 +200,14 @@ fun MealPlannerScreen(modifier: Modifier = Modifier) {
                     errorMsg = ""
                     scope.launch {
                         try { generate() } catch (e: Exception) {
-                            errorMsg = LanguageManager.t("chat_error") + ": ${e.message}"
+                            errorMsg = context.getString(R.string.chat_error) + ": ${e.message}"
                         }
                         isLoading = false
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp)
-            ) { Text(LanguageManager.t("regenerate"), fontSize = 14.sp) }
+            ) { Text(stringResource(R.string.common_regenerate), fontSize = 14.sp) }
             Spacer(Modifier.height(32.dp))
         }
     }
@@ -194,7 +215,7 @@ fun MealPlannerScreen(modifier: Modifier = Modifier) {
 
 @Composable
 private fun MealCard(
-    emoji: String,
+    icon: ImageVector,
     title: String,
     meal: MealSuggestion,
     onLog: () -> Unit
@@ -209,7 +230,8 @@ private fun MealCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(emoji, fontSize = 28.sp)
+                Icon(icon, contentDescription = null, modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(8.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(title, fontSize = 12.sp,
@@ -225,7 +247,7 @@ private fun MealCard(
             Text(meal.description, fontSize = 13.sp, lineHeight = 20.sp)
             Spacer(Modifier.height(8.dp))
             Text(
-                "💪 ${meal.proteinG}g · 🍞 ${meal.carbsG}g · 🥑 ${meal.fatG}g",
+                "P: ${meal.proteinG}g · C: ${meal.carbsG}g · F: ${meal.fatG}g",
                 fontSize = 12.sp, color = MaterialTheme.colorScheme.outline
             )
             Spacer(Modifier.height(8.dp))
@@ -236,8 +258,8 @@ private fun MealCard(
                 enabled = !logged
             ) {
                 Text(
-                    if (logged) "✅ ${LanguageManager.t("saved")}"
-                    else "✅ ${LanguageManager.t("log_meal")}",
+                    if (logged) stringResource(R.string.common_saved)
+                    else stringResource(R.string.meal_log),
                     fontSize = 13.sp
                 )
             }

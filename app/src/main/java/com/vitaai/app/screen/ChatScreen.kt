@@ -1,30 +1,40 @@
 package com.vitaai.app.screen
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.R
-import com.vitaai.app.utils.LanguageManager
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.utils.XPManager
 import com.vitaai.app.utils.callOpenAIWithHistory
 import kotlinx.coroutines.launch
+import java.util.Locale
+
+private const val USERS_COLLECTION = "users"
+private const val FIELD_GOAL = "goal"
+private const val FIELD_WEIGHT = "weight"
+private const val FIELD_DIET_PLAN = "dietPlan"
+
+private const val ROLE_USER = "user"
+private const val ROLE_ASSISTANT = "assistant"
+
+private const val PROFILE_PREFIX = "Goal: "
+private const val PROFILE_WEIGHT = ", Weight: "
+private const val PROFILE_UNIT_KG = "kg. Current plan: "
 
 data class ChatMessage(
     val content: String,
@@ -34,6 +44,7 @@ data class ChatMessage(
 
 @Composable
 fun ChatScreen(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val db = FirebaseFirestore.getInstance()
@@ -43,33 +54,21 @@ fun ChatScreen(modifier: Modifier = Modifier) {
     var isLoading by remember { mutableStateOf(false) }
     var userProfile by remember { mutableStateOf("") }
 
-    val langName = when(LanguageManager.currentLanguage.value) {
-        "en" -> "English"
-        "zh" -> "Chinese"
-        "fr" -> "French"
-        "pt" -> "Portuguese"
-        else -> "Spanish"
-    }
+    val langName = Locale.getDefault().displayLanguage
 
-    val welcomeMsg = when(LanguageManager.currentLanguage.value) {
-        "en" -> "Hi! I'm Aira, your personal AI nutritionist 🥗 I can help with food advice, analyze your meals and adjust your plan. How can I help you today?"
-        "zh" -> "你好！我是Aira，你的AI私人营养师 🥗 我可以帮你提供饮食建议、分析你的饮食并调整你的计划。今天需要什么帮助？"
-        "fr" -> "Bonjour! Je suis Aira, votre nutritionniste IA personnelle 🥗 Je peux vous aider avec des conseils alimentaires. Comment puis-je vous aider?"
-        "pt" -> "Olá! Sou Aira, sua nutricionista IA pessoal 🥗 Posso ajudá-lo com conselhos alimentares. Como posso ajudá-lo hoje?"
-        else -> "¡Hola! Soy Aira, tu nutricionista personal IA 🥗 Puedo ayudarte con consejos de alimentación, analizar tus comidas y ajustar tu plan. ¿En qué te ayudo hoy?"
-    }
+    val welcomeMsg = stringResource(R.string.chat_welcome)
 
     var messages by remember {
         mutableStateOf(listOf(ChatMessage(welcomeMsg, false)))
     }
 
     LaunchedEffect(Unit) {
-        db.collection("users").document(uid).get()
+        db.collection(USERS_COLLECTION).document(uid).get()
             .addOnSuccessListener { doc ->
-                val goal = doc.getString("goal") ?: ""
-                val weight = doc.getDouble("weight") ?: 0.0
-                val dietPlan = doc.getString("dietPlan") ?: ""
-                userProfile = "Goal: $goal, Weight: ${weight}kg. Current plan: $dietPlan"
+                val goal = doc.getString(FIELD_GOAL) ?: ""
+                val weight = doc.getDouble(FIELD_WEIGHT) ?: 0.0
+                val dietPlan = doc.getString(FIELD_DIET_PLAN) ?: ""
+                userProfile = "$PROFILE_PREFIX$goal$PROFILE_WEIGHT${weight}$PROFILE_UNIT_KG$dietPlan"
             }
     }
 
@@ -108,7 +107,7 @@ fun ChatScreen(modifier: Modifier = Modifier) {
         ) {
             OutlinedTextField(
                 value = userInput, onValueChange = { userInput = it },
-                placeholder = { Text(LanguageManager.t("ask_me")) },
+                placeholder = { Text(stringResource(R.string.chat_ask_me)) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(24.dp),
                 maxLines = 3
@@ -129,6 +128,7 @@ fun ChatScreen(modifier: Modifier = Modifier) {
                         try {
                             val systemContext = """
                                 You are Aira, an expert AI nutritionist and personal trainer, empathetic and motivating. Your name is Aira.
+                                - Always introduce yourself as Aira if asked your name
                                 USER PROFILE: $userProfile
                                 RULES:
                                 - Remember EVERYTHING the user has said in this conversation
@@ -136,15 +136,14 @@ fun ChatScreen(modifier: Modifier = Modifier) {
                                 - ALWAYS respond in $langName
                                 - Be concise but useful, max 4 sentences
                                 - Use emojis occasionally
-                                - Always introduce yourself as Aira if asked
                             """.trimIndent()
                             val history = messages.map { msg ->
-                                Pair(if (msg.isUser) "user" else "assistant", msg.content)
+                                Pair(if (msg.isUser) ROLE_USER else ROLE_ASSISTANT, msg.content)
                             }
                             val response = callOpenAIWithHistory(systemContext, history)
                             messages = messages + ChatMessage(response, false)
                         } catch (e: Exception) {
-                            messages = messages + ChatMessage(LanguageManager.t("chat_error"), false)
+                            messages = messages + ChatMessage(context.getString(R.string.chat_error), false)
                         }
                         isLoading = false
                     }
@@ -152,8 +151,11 @@ fun ChatScreen(modifier: Modifier = Modifier) {
                 containerColor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(52.dp)
             ) {
-                Icon(Icons.Default.Send, contentDescription = LanguageManager.t("send"),
-                    tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(
+                    imageVector = IconList.Send,
+                    contentDescription = stringResource(R.string.common_send),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
     }
@@ -168,13 +170,14 @@ fun ChatBubble(msg: ChatMessage) {
         if (!msg.isUser) {
             Box(
                 modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF010721)),
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(R.drawable.logo_mark),
-                    contentDescription = "VitaAI",
-                    modifier = Modifier.fillMaxSize()
+                Icon(
+                    imageVector = IconList.Nutritionist,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = IconList.RobotTeal
                 )
             }
             Spacer(Modifier.width(8.dp))
@@ -203,8 +206,14 @@ fun ChatBubble(msg: ChatMessage) {
                 modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.secondaryContainer),
                 contentAlignment = Alignment.Center
-            ) { Text("👤", fontSize = 16.sp) }
+            ) {
+                Icon(
+                    imageVector = IconList.Profile,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
-

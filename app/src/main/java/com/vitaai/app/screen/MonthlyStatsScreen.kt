@@ -5,10 +5,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.TrendingDown
+import androidx.compose.material.icons.filled.TrendingFlat
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,8 +26,9 @@ import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.utils.DateUtils
-import com.vitaai.app.utils.LanguageManager
 import kotlinx.coroutines.tasks.await
 
 private data class DayStat(
@@ -92,10 +99,15 @@ fun MonthlyStatsScreen(modifier: Modifier = Modifier) {
 
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
         Spacer(Modifier.height(8.dp))
-        Text("📅 ${LanguageManager.t("monthly_stats")}",
-            fontSize = 24.sp, fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
-        Text(LanguageManager.t("last_30_days"),
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(IconList.MonthlyStats, contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.home_monthly_stats),
+                fontSize = 24.sp, fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary)
+        }
+        Text(stringResource(R.string.monthly_last_30),
             fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
         Spacer(Modifier.height(16.dp))
 
@@ -109,18 +121,20 @@ fun MonthlyStatsScreen(modifier: Modifier = Modifier) {
         // KPI tiles
         Row(modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            KpiCard("🔥", "$avgCal", LanguageManager.t("avg_calories"), Modifier.weight(1f))
-            KpiCard("📅", "$activeDays", LanguageManager.t("active_days"), Modifier.weight(1f))
+            KpiCard(IconList.Fire, "$avgCal", stringResource(R.string.monthly_avg_calories), Modifier.weight(1f))
+            KpiCard(IconList.MonthlyStats, "$activeDays", stringResource(R.string.monthly_active_days), Modifier.weight(1f))
         }
         Spacer(Modifier.height(8.dp))
         Row(modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            KpiCard("🏋️", "${totalExercise}min", LanguageManager.t("total_exercise"),
+            KpiCard(IconList.Exercise, "${totalExercise}min", stringResource(R.string.monthly_total_exercise),
                 Modifier.weight(1f))
             KpiCard(
-                if (weightChange < 0) "📉" else if (weightChange > 0) "📈" else "➡️",
+                if (weightChange < 0) Icons.Filled.TrendingDown
+                else if (weightChange > 0) Icons.Filled.TrendingUp
+                else Icons.Filled.TrendingFlat,
                 "${if (weightChange > 0) "+" else ""}${"%.1f".format(weightChange)}kg",
-                LanguageManager.t("weight_change"),
+                stringResource(R.string.monthly_weight_change),
                 Modifier.weight(1f)
             )
         }
@@ -128,7 +142,7 @@ fun MonthlyStatsScreen(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(20.dp))
 
         // Calorie bar chart
-        Text("🔥 ${LanguageManager.t("daily_calories")}",
+        Text(stringResource(R.string.progress_daily_calories),
             fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(8.dp))
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
@@ -164,7 +178,7 @@ fun MonthlyStatsScreen(modifier: Modifier = Modifier) {
 
         // Weight line chart
         if (weights.size >= 2) {
-            Text("⚖️ ${LanguageManager.t("weight_evolution")}",
+            Text(stringResource(R.string.progress_weight_evolution),
                 fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(8.dp))
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
@@ -204,7 +218,7 @@ fun MonthlyStatsScreen(modifier: Modifier = Modifier) {
         }
 
         // Water bar chart
-        Text("💧 ${LanguageManager.t("water")}",
+        Text(stringResource(R.string.water_label),
             fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(8.dp))
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
@@ -240,14 +254,16 @@ fun MonthlyStatsScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun KpiCard(emoji: String, value: String, label: String, modifier: Modifier) {
+private fun KpiCard(icon: ImageVector, value: String, label: String, modifier: Modifier) {
     Card(modifier = modifier, shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(emoji, fontSize = 22.sp)
+            Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp),
+                tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(4.dp))
             Text(value, fontSize = 18.sp, fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary)
             Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)

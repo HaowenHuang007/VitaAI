@@ -103,8 +103,8 @@ class WaterReminderWorker(context: Context, params: WorkerParameters) :
         NotificationScheduler.show(
             applicationContext,
             1001,
-            LanguageManager.t("notif_water_title"),
-            LanguageManager.t("notif_water_body")
+            applicationContext.getString(R.string.notif_water_title),
+            applicationContext.getString(R.string.notif_water_body)
         )
         return Result.success()
     }
@@ -116,8 +116,8 @@ class EveningReminderWorker(context: Context, params: WorkerParameters) :
         NotificationScheduler.show(
             applicationContext,
             1002,
-            LanguageManager.t("notif_evening_title"),
-            LanguageManager.t("notif_evening_body")
+            applicationContext.getString(R.string.notif_evening_title),
+            applicationContext.getString(R.string.notif_evening_body)
         )
         return Result.success()
     }

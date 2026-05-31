@@ -9,18 +9,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
+import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
-import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.XPManager
 import com.vitaai.app.utils.callOpenAI
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.util.Locale
+
+private const val USERS_COLLECTION = "users"
+private const val FIELD_DIET = "dietPlan"
+private const val FIELD_EXERCISE = "exercisePlan"
 
 @Composable
 fun PlanScreen(
@@ -38,13 +46,7 @@ fun PlanScreen(
 
     val imc = weight / ((height / 100) * (height / 100))
     val imcFormatted = "%.1f".format(imc)
-    val langName = when(LanguageManager.currentLanguage.value) {
-        "en" -> "English"
-        "zh" -> "Chinese"
-        "fr" -> "French"
-        "pt" -> "Portuguese"
-        else -> "Spanish"
-    }
+    val langName = Locale.getDefault().displayLanguage
 
     LaunchedEffect(Unit) {
         scope.launch {
@@ -96,16 +98,13 @@ fun PlanScreen(
                 val uid = FirebaseAuth.getInstance().currentUser?.uid
                 if (uid != null) {
                     FirebaseFirestore.getInstance()
-                        .collection("users").document(uid)
+                        .collection(USERS_COLLECTION).document(uid)
                         .update(mapOf(
-                            "dietPlan" to dietPlan,
-                            "exercisePlan" to exercisePlan,
+                            FIELD_DIET to dietPlan,
+                            FIELD_EXERCISE to exercisePlan,
                             "age" to age, "weight" to weight,
                             "height" to height, "goal" to goal, "imc" to imc
                         ))
-                        .addOnFailureListener {
-                            errorMsg = "⚠️ ${LanguageManager.t("error_saving")}"
-                        }
                     XPManager.addXPWithLimit(
                         amount = XPManager.XP_GENERATE_PLAN,
                         actionKey = XPManager.KEY_PLAN,
@@ -126,10 +125,16 @@ fun PlanScreen(
             .padding(24.dp)
     ) {
         Spacer(Modifier.height(16.dp))
-        Text(LanguageManager.t("current_plan"), fontSize = 24.sp,
-            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Text("$age · ${weight}kg · ${height}cm · BMI $imcFormatted",
-            fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+        Text(
+            text = stringResource(R.string.plan_current_title),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = stringResource(R.string.plan_summary_format, age, weight, height, imcFormatted),
+            fontSize = 13.sp, color = MaterialTheme.colorScheme.outline
+        )
         Spacer(Modifier.height(24.dp))
 
         if (isLoading) {
@@ -138,9 +143,11 @@ fun PlanScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(16.dp))
-                    Text(LanguageManager.t("generating_plan"),
+                    Text(
+                        text = stringResource(R.string.plan_generating),
                         color = MaterialTheme.colorScheme.outline,
-                        textAlign = TextAlign.Center)
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         } else if (errorMsg.isNotEmpty()) {
@@ -156,13 +163,21 @@ fun PlanScreen(
                 ) {
                     Row(modifier = Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically) {
-                        Text("✅", fontSize = 18.sp)
+                        Icon(imageVector = IconList.Save, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(8.dp))
                         Column {
-                            Text(LanguageManager.t("saved"),
-                                fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            Text("+${XPManager.XP_GENERATE_PLAN} XP 🏆",
-                                fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
+                            Text(
+                                text = stringResource(R.string.common_saved),
+                                fontSize = 13.sp, fontWeight = FontWeight.SemiBold
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = stringResource(R.string.common_xp_reward, XPManager.XP_GENERATE_PLAN),
+                                    fontSize = 12.sp, color = MaterialTheme.colorScheme.outline
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Icon(imageVector = IconList.Achievements, contentDescription = null, modifier = Modifier.size(14.dp), tint = Gold)
+                            }
                         }
                     }
                 }
@@ -173,8 +188,15 @@ fun PlanScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(LanguageManager.t("diet_plan"), fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = IconList.Diet, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.plan_diet_title),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Spacer(Modifier.height(8.dp))
                     Text(dietPlan, fontSize = 14.sp, lineHeight = 22.sp)
                 }
@@ -186,8 +208,15 @@ fun PlanScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(LanguageManager.t("exercise_plan"), fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = IconList.Exercise, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.plan_exercise_title),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Spacer(Modifier.height(8.dp))
                     Text(exercisePlan, fontSize = 14.sp, lineHeight = 22.sp)
                 }
@@ -201,10 +230,12 @@ fun PlanScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = NavyBlue)
             ) {
-                Text(LanguageManager.t("back_to_home"), fontSize = 16.sp, color = Color.White)
+                Text(
+                    text = stringResource(R.string.plan_back_home),
+                    fontSize = 16.sp, color = Color.White
+                )
             }
         }
         Spacer(Modifier.height(32.dp))
     }
 }
-

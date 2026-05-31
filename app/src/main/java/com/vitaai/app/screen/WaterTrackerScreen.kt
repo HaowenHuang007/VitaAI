@@ -14,17 +14,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.RoyalBlue
 import com.vitaai.app.utils.AchievementManager
 import com.vitaai.app.utils.DateUtils
-import com.vitaai.app.utils.LanguageManager
-import com.vitaai.app.utils.NutritionCalculator
 import com.vitaai.app.utils.StreakManager
 import com.vitaai.app.utils.WaterManager
 import com.vitaai.app.utils.XPManager
@@ -33,6 +35,7 @@ import com.vitaai.app.utils.XPManager
 fun WaterTrackerScreen(modifier: Modifier = Modifier) {
     val db = FirebaseFirestore.getInstance()
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    val context = LocalContext.current
 
     var totalMl by remember { mutableStateOf(0) }
     var targetMl by remember { mutableStateOf(2500) }
@@ -51,7 +54,7 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
 
     fun add(amount: Int) {
         WaterManager.addWater(amount) { newTotal ->
-            if (newTotal == -1) { saveError = LanguageManager.t("error_saving"); return@addWater }
+            if (newTotal == -1) { saveError = context.getString(R.string.common_error_saving); return@addWater }
             saveError = ""
             totalMl = newTotal
             StreakManager.recordActivity()
@@ -89,9 +92,9 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(16.dp))
-        Text("💧", fontSize = 64.sp)
+        Icon(IconList.Water, contentDescription = null, tint = IconList.WaterBlue, modifier = Modifier.size(64.dp))
         Spacer(Modifier.height(8.dp))
-        Text(LanguageManager.t("water_tracker"), fontSize = 24.sp,
+        Text(stringResource(R.string.water_title), fontSize = 24.sp,
             fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
 
         if (saveError.isNotEmpty()) {
@@ -112,7 +115,7 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
             ) {
                 Text("${animatedTotal} ml", fontSize = 48.sp,
                     fontWeight = FontWeight.Bold, color = Color.White)
-                Text(LanguageManager.t("goal") + " ${targetMl} ml",
+                Text(stringResource(R.string.water_goal_format, targetMl),
                     fontSize = 13.sp, color = Color.White.copy(alpha = 0.7f))
                 Spacer(Modifier.height(16.dp))
                 Box(
@@ -137,7 +140,7 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(24.dp))
 
-        Text(LanguageManager.t("quick_add"), fontSize = 14.sp,
+        Text(stringResource(R.string.water_quick_add), fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
         Spacer(Modifier.height(8.dp))
@@ -170,7 +173,7 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(LanguageManager.t("reset_today"), fontSize = 14.sp)
+            Text(stringResource(R.string.water_reset_today), fontSize = 14.sp)
         }
 
         if (history.isNotEmpty()) {
@@ -178,7 +181,7 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
             HorizontalDivider()
             Spacer(Modifier.height(16.dp))
             Text(
-                LanguageManager.t("recent_history"),
+                stringResource(R.string.water_recent_history),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.fillMaxWidth()
@@ -186,8 +189,8 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
             Spacer(Modifier.height(8.dp))
             history.forEach { (date, ml) ->
                 val label = when {
-                    date == DateUtils.todayKey() -> LanguageManager.t("today")
-                    DateUtils.isYesterday(date) -> LanguageManager.t("yesterday")
+                    date == DateUtils.todayKey() -> stringResource(R.string.common_today)
+                    DateUtils.isYesterday(date) -> stringResource(R.string.common_yesterday)
                     else -> date
                 }
                 Row(
@@ -196,7 +199,7 @@ fun WaterTrackerScreen(modifier: Modifier = Modifier) {
                         .padding(vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("💧", fontSize = 16.sp)
+                    Icon(IconList.Water, contentDescription = null, tint = IconList.WaterBlue, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(label, fontSize = 13.sp, modifier = Modifier.weight(1f))
                     val pct = (ml.toFloat() / targetMl.coerceAtLeast(1) * 100).toInt()

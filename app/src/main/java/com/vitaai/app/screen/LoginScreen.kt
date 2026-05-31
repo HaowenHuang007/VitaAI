@@ -3,19 +3,22 @@ package com.vitaai.app.screen
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -29,15 +32,22 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
+
+private const val COLLECTION_USERS = "users"
+private const val FIELD_USERNAME = "username"
+private const val FIELD_EMAIL = "email"
+private const val GOOGLE_FAVICON_URL = "https://www.google.com/favicon.ico"
 
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
     val auth = FirebaseAuth.getInstance()
     val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
+    val scrollState = rememberScrollState()
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -45,6 +55,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
     var isGoogleLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
 
+    // State for recovery dialog
     var showForgotDialog by remember { mutableStateOf(false) }
     var forgotEmail by remember { mutableStateOf("") }
     var forgotMsg by remember { mutableStateOf("") }
@@ -70,31 +81,42 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                 isGoogleLoading = true
                 auth.signInWithCredential(credential)
                     .addOnSuccessListener { authResult ->
-                        val uid = authResult.user?.uid ?: return@addOnSuccessListener
+                        val uid = authResult.user?.uid ?: run {
+                            isGoogleLoading = false
+                            return@addOnSuccessListener
+                        }
                         val isNew = authResult.additionalUserInfo?.isNewUser == true
                         if (isNew) {
-                            db.collection("users").document(uid)
+                            db.collection(COLLECTION_USERS).document(uid)
                                 .set(mapOf(
-                                    "username" to (account.displayName ?: ""),
-                                    "email" to (account.email ?: "")
+                                    FIELD_USERNAME to (account.displayName ?: ""),
+                                    FIELD_EMAIL to (account.email ?: "")
                                 ))
-                                .addOnSuccessListener { onLoginSuccess() }
+                                .addOnSuccessListener {
+                                    isGoogleLoading = false
+                                    onLoginSuccess()
+                                }
+                                .addOnFailureListener {
+                                    errorMsg = context.getString(R.string.login_error_create_profile, it.message ?: "")
+                                    isGoogleLoading = false
+                                }
                         } else {
+                            isGoogleLoading = false
                             onLoginSuccess()
                         }
-                        isGoogleLoading = false
                     }
                     .addOnFailureListener {
-                        errorMsg = "Error con Google: ${it.message}"
+                        errorMsg = context.getString(R.string.common_error_generic, it.message ?: "")
                         isGoogleLoading = false
                     }
             } catch (e: ApiException) {
-                errorMsg = "Error de Google Sign In"
+                errorMsg = context.getString(R.string.login_error_google_sign_in)
                 isGoogleLoading = false
             }
         }
     }
 
+    // Professional Recovery Dialog
     if (showForgotDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -105,19 +127,28 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                     isEmailSentSuccess = false
                 }
             },
-            title = { Text("Recuperar contraseña", fontWeight = FontWeight.Bold) },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = IconList.Lock, contentDescription = null, tint = NavyBlue, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.login_forgot_password_title), fontWeight = FontWeight.Bold)
+                }
+            },
             text = {
                 Column {
                     if (isEmailSentSuccess) {
-                        Text("✅ Email enviado a $forgotEmail",
-                            fontSize = 14.sp, color = NavyBlue)
+                        Text(
+                            text = stringResource(R.string.login_email_sent_success, forgotEmail),
+                            fontSize = 14.sp,
+                            color = NavyBlue
+                        )
                     } else {
-                        Text("Introduce tu email registrado",
+                        Text(stringResource(R.string.login_forgot_password_desc),
                             fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
                             value = forgotEmail, onValueChange = { forgotEmail = it },
-                            label = { Text("Email") },
+                            label = { Text(stringResource(R.string.common_email)) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp), singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
@@ -140,6 +171,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                         } else {
                             isForgotLoading = true
                             forgotMsg = ""
+                            // Direct email sending via Firebase
                             auth.sendPasswordResetEmail(forgotEmail)
                                 .addOnSuccessListener {
                                     isForgotLoading = false
@@ -147,7 +179,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                                 }
                                 .addOnFailureListener {
                                     isForgotLoading = false
-                                    forgotMsg = "❌ Error al enviar email"
+                                    forgotMsg = context.getString(R.string.login_error_send_email)
                                 }
                         }
                     },
@@ -159,14 +191,18 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                             modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp
                         )
                     } else {
-                        Text(if (isEmailSentSuccess) "Cerrar" else "Enviar", color = Color.White)
+                        if (isEmailSentSuccess) {
+                            Text(stringResource(R.string.common_close), color = Color.White)
+                        } else {
+                            Text(stringResource(R.string.common_send), color = Color.White)
+                        }
                     }
                 }
             },
             dismissButton = {
                 if (!isEmailSentSuccess) {
                     TextButton(onClick = { showForgotDialog = false; forgotMsg = "" }) {
-                        Text("Cancelar")
+                        Text(stringResource(R.string.common_cancel))
                     }
                 }
             }
@@ -181,7 +217,10 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
             ))
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(32.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -189,19 +228,20 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFF010721)),
+                    .background(Gold.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(R.drawable.logo_mark),
-                    contentDescription = "VitaAI",
-                    modifier = Modifier.fillMaxSize()
+                Icon(
+                    imageVector = IconList.Logo,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp),
+                    tint = IconList.PlantGreen
                 )
             }
 
             Spacer(Modifier.height(20.dp))
-            Text("VitaAI", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = Gold)
-            Text("Tu asistente de salud inteligente", fontSize = 14.sp,
+            Text(stringResource(R.string.app_name), fontSize = 42.sp, fontWeight = FontWeight.Bold, color = Gold)
+            Text(stringResource(R.string.login_tagline), fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.7f), textAlign = TextAlign.Center)
 
             Spacer(Modifier.height(48.dp))
@@ -212,7 +252,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    Text("Iniciar sesión", fontSize = 20.sp,
+                    Text(stringResource(R.string.login_title), fontSize = 20.sp,
                         fontWeight = FontWeight.Bold, color = DeepBlue)
                     Spacer(Modifier.height(20.dp))
 
@@ -234,12 +274,12 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 AsyncImage(
-                                    model = "https://www.google.com/favicon.ico",
-                                    contentDescription = "Google",
+                                    model = GOOGLE_FAVICON_URL,
+                                    contentDescription = stringResource(R.string.common_google),
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(Modifier.width(8.dp))
-                                Text("Continuar con Google", fontSize = 15.sp, color = DeepBlue)
+                                Text(stringResource(R.string.login_google_button), fontSize = 15.sp, color = DeepBlue)
                             }
                         }
                     }
@@ -250,14 +290,14 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         HorizontalDivider(modifier = Modifier.weight(1f))
-                        Text("  o  ", fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
+                        Text(stringResource(R.string.common_or), fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
                         HorizontalDivider(modifier = Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(16.dp))
 
                     OutlinedTextField(
                         value = email, onValueChange = { email = it },
-                        label = { Text("Email") },
+                        label = { Text(stringResource(R.string.common_email)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp), singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -266,7 +306,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
                         value = password, onValueChange = { password = it },
-                        label = { Text("Contraseña") },
+                        label = { Text(stringResource(R.string.common_password)) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp), singleLine = true,
@@ -281,10 +321,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                         TextButton(onClick = {
                             forgotEmail = email
                             forgotMsg = ""
-                            isEmailSentSuccess = false
                             showForgotDialog = true
                         }) {
-                            Text("¿Olvidaste tu contraseña?", fontSize = 12.sp, color = NavyBlue)
+                            Text(stringResource(R.string.login_forgot_password_link), fontSize = 12.sp, color = NavyBlue)
                         }
                     }
 
@@ -294,6 +333,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                     }
 
                     Spacer(Modifier.height(8.dp))
+                    // Main Login Button
                     Button(
                         onClick = {
                             isLoading = true
@@ -301,7 +341,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                             auth.signInWithEmailAndPassword(email, password)
                                 .addOnSuccessListener { onLoginSuccess() }
                                 .addOnFailureListener {
-                                    errorMsg = "Email o contraseña incorrectos"
+                                    errorMsg = context.getString(R.string.login_error_invalid_credentials)
                                     isLoading = false
                                 }
                         },
@@ -311,17 +351,20 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                                 && email.isNotEmpty() && password.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(containerColor = NavyBlue)
                     ) {
-                        if (isLoading) CircularProgressIndicator(
-                            modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp
-                        )
-                        else Text("Iniciar sesión", fontSize = 16.sp, color = Color.White)
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(stringResource(R.string.login_title), fontSize = 16.sp, color = Color.White)
+                        }
                     }
                 }
             }
 
             Spacer(Modifier.height(16.dp))
             TextButton(onClick = onGoRegister) {
-                Text("¿No tienes cuenta? Regístrate", color = Gold)
+                Text(stringResource(R.string.login_go_to_register), color = Gold)
             }
         }
     }

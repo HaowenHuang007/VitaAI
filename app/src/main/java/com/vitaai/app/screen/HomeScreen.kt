@@ -1,18 +1,12 @@
 package com.vitaai.app.screen
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,18 +19,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
-import com.vitaai.app.utils.DailyChallengeManager
-import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.NutritionCalculator
 import com.vitaai.app.utils.NutritionLog
 import com.vitaai.app.utils.StreakManager
@@ -46,6 +40,28 @@ import com.vitaai.app.utils.callOpenAIWithHistory
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+
+private const val COLLECTION_USERS = "users"
+private const val COLLECTION_MOODS = "moods"
+private const val FIELD_XP = "xp"
+private const val FIELD_DIET_PLAN = "dietPlan"
+private const val FIELD_WEIGHT = "weight"
+private const val FIELD_HEIGHT = "height"
+private const val FIELD_AGE = "age"
+private const val FIELD_ACTIVITY = "activity"
+private const val FIELD_GOAL = "goal"
+private const val FIELD_MOOD = "mood"
+private const val FIELD_RECOMMENDATION = "recommendation"
+
+private const val DATE_FORMAT_ISO = "yyyy-MM-dd"
+private const val DATE_FORMAT_DAY = "EEEE"
+private const val DATE_FORMAT_DISPLAY = "d MMMM"
+
+private const val DEFAULT_WEIGHT = 70.0
+private const val DEFAULT_HEIGHT = 170.0
+private const val DEFAULT_AGE = 25
+private const val DEFAULT_ACTIVITY = "moderate"
+private const val DEFAULT_GOAL = "maintain_weight"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,61 +91,55 @@ fun HomeScreen(
     val uid = user?.uid ?: return
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val currentLang by LanguageManager.currentLanguage
-    var moreExpanded by remember { mutableStateOf(false) }
 
     var todayMood by remember { mutableStateOf("") }
-    var todayMoodEmoji by remember { mutableStateOf("") }
+    var todayMoodId by remember { mutableStateOf("") }
     var todayRecommendation by remember { mutableStateOf("") }
     var dailyTip by remember { mutableStateOf("") }
     var isLoadingTip by remember { mutableStateOf(false) }
-    var userXP by remember { mutableStateOf(0) }
+    var userXP by remember { mutableIntStateOf(0) }
     var hasPlan by remember { mutableStateOf(false) }
 
-    var streakCurrent by remember { mutableStateOf(0) }
-    var challenge by remember { mutableStateOf<DailyChallengeManager.TodayChallenge?>(null) }
-    var totalsCalories by remember { mutableStateOf(0) }
-    var totalsProtein by remember { mutableStateOf(0) }
-    var totalsCarbs by remember { mutableStateOf(0) }
-    var totalsFat by remember { mutableStateOf(0) }
+    var streakCurrent by remember { mutableIntStateOf(0) }
+    var totalsCalories by remember { mutableIntStateOf(0) }
+    var totalsProtein by remember { mutableIntStateOf(0) }
+    var totalsCarbs by remember { mutableIntStateOf(0) }
+    var totalsFat by remember { mutableIntStateOf(0) }
     var targets by remember { mutableStateOf<NutritionCalculator.DailyTargets?>(null) }
-    var waterMl by remember { mutableStateOf(0) }
+    var waterMl by remember { mutableIntStateOf(0) }
 
-    val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-    val langLocale = when(currentLang) {
-        "en" -> Locale.ENGLISH; "fr" -> Locale.FRENCH; "zh" -> Locale.CHINESE
-        "pt" -> Locale("pt"); else -> Locale("es")
-    }
-    val dayOfWeek = SimpleDateFormat("EEEE", langLocale).format(Date())
+    val today = SimpleDateFormat(DATE_FORMAT_ISO, Locale.US).format(Date())
+    val locale = Locale.getDefault()
+    
+    val dayOfWeek = SimpleDateFormat(DATE_FORMAT_DAY, locale).format(Date())
         .replaceFirstChar { it.uppercase() }
-    val dateFormatted = SimpleDateFormat("d MMMM", langLocale).format(Date())
+    val dateFormatted = SimpleDateFormat(DATE_FORMAT_DISPLAY, locale).format(Date())
         .replaceFirstChar { it.uppercase() }
 
     LaunchedEffect(Unit) {
-        db.collection("users").document(uid).get()
+        db.collection(COLLECTION_USERS).document(uid).get()
             .addOnSuccessListener { doc ->
-                userXP = (doc.getLong("xp") ?: 0).toInt()
-                hasPlan = doc.getString("dietPlan")?.isNotEmpty() == true
-                val w = doc.getDouble("weight") ?: 70.0
-                val h = doc.getDouble("height") ?: 170.0
-                val a = (doc.getLong("age") ?: 25).toInt()
-                val act = doc.getString("activity") ?: "moderate"
-                val goal = doc.getString("goal") ?: "maintain_weight"
+                userXP = (doc.getLong(FIELD_XP) ?: 0).toInt()
+                hasPlan = doc.getString(FIELD_DIET_PLAN)?.isNotEmpty() == true
+                val w = doc.getDouble(FIELD_WEIGHT) ?: DEFAULT_WEIGHT
+                val h = doc.getDouble(FIELD_HEIGHT) ?: DEFAULT_HEIGHT
+                val a = (doc.getLong(FIELD_AGE) ?: DEFAULT_AGE).toInt()
+                val act = doc.getString(FIELD_ACTIVITY) ?: DEFAULT_ACTIVITY
+                val goal = doc.getString(FIELD_GOAL) ?: DEFAULT_GOAL
                 targets = NutritionCalculator.computeTargets(w, h, a, act, goal)
             }
 
-        db.collection("users").document(uid)
-            .collection("moods").document(today).get()
+        db.collection(COLLECTION_USERS).document(uid)
+            .collection(COLLECTION_MOODS).document(today).get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
-                    todayMood = doc.getString("mood") ?: ""
-                    todayMoodEmoji = doc.getString("emoji") ?: ""
-                    todayRecommendation = doc.getString("recommendation") ?: ""
+                    todayMood = doc.getString(FIELD_MOOD) ?: ""
+                    todayMoodId = doc.getString("moodId") ?: ""
+                    todayRecommendation = doc.getString(FIELD_RECOMMENDATION) ?: ""
                 }
             }
 
         StreakManager.loadStreak { s -> streakCurrent = s.current }
-        DailyChallengeManager.loadToday { c -> challenge = c }
         NutritionLog.loadToday { t ->
             totalsCalories = t.calories; totalsProtein = t.proteinG
             totalsCarbs = t.carbsG; totalsFat = t.fatG
@@ -139,20 +149,17 @@ fun HomeScreen(
         isLoadingTip = true
         scope.launch {
             try {
-                val langName = when(currentLang) {
-                    "en" -> "English"; "zh" -> "Chinese"; "fr" -> "French"; "pt" -> "Portuguese"
-                    else -> "Spanish"
-                }
+                val langName = locale.displayLanguage
                 val prompt = """
                     You are a health and nutrition expert.
                     Give ONE brief, practical and motivating health tip for today $dayOfWeek.
-                    Maximum 2 sentences. Use 1 relevant emoji at the start.
+                    Maximum 2 sentences.
                     Vary between: nutrition, exercise, rest, hydration, mindfulness.
                     Respond in $langName.
                 """.trimIndent()
                 dailyTip = callOpenAIWithHistory(prompt, emptyList())
-            } catch (e: Exception) {
-                dailyTip = "💧 ${LanguageManager.t("daily_tip")}"
+            } catch (_: Exception) {
+                dailyTip = "Error loading daily tip"
             }
             isLoadingTip = false
         }
@@ -164,120 +171,117 @@ fun HomeScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(drawerContainerColor = DeepBlue) {
-                Spacer(Modifier.height(48.dp))
-                Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
-                    Column {
-                        Box(
-                            modifier = Modifier.size(60.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFF010721)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.logo_mark),
-                                contentDescription = "VitaAI",
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Text("VitaAI", fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold, color = Gold)
-                        Text(user.email ?: "", fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.6f))
-                        Spacer(Modifier.height(4.dp))
-                        Text("${levelInfo.emoji} ${levelInfo.title} • $userXP XP",
-                            fontSize = 12.sp, color = Gold.copy(alpha = 0.8f))
-                    }
-                }
-
-                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(48.dp))
+                    Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+                        Column {
+                            Box(
+                                modifier = Modifier.size(60.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Gold.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = IconList.Plan,
+                                    contentDescription = null,
+                                    tint = IconList.PlantGreen,
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text("VitaAI", fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold, color = Gold)
+                            Text(user.email ?: "", fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.6f))
+                            Spacer(Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(IconList.getIconForLevel(levelInfo.level), null, tint = Gold, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("${stringResource(R.string.level_label)} ${levelInfo.level} • $userXP XP",
+                                    fontSize = 12.sp, color = Gold.copy(alpha = 0.8f))
+                            }
+                        }
+                    }
 
-                DrawerItem("🤖", LanguageManager.t("my_plan")) {
-                    scope.launch { drawerState.close() }; onGoQuestionnaire()
-                }
-                DrawerItem("🎯", LanguageManager.t("my_goals")) {
-                    scope.launch { drawerState.close() }; onGoGoals()
-                }
-                DrawerItem("📈", LanguageManager.t("weekly_report")) {
-                    scope.launch { drawerState.close() }; onGoWeeklyReport()
-                }
-                DrawerItem("📅", LanguageManager.t("monthly_stats")) {
-                    scope.launch { drawerState.close() }; onGoMonthlyStats()
-                }
-                DrawerItem("🍳", LanguageManager.t("meal_planner")) {
-                    scope.launch { drawerState.close() }; onGoMealPlanner()
-                }
-                DrawerItem("📖", LanguageManager.t("recipes")) {
-                    scope.launch { drawerState.close() }; onGoRecipes()
-                }
-                DrawerItem("🛒", LanguageManager.t("shopping_list")) {
-                    scope.launch { drawerState.close() }; onGoShoppingList()
-                }
-                DrawerItem("⭐", LanguageManager.t("favorites")) {
-                    scope.launch { drawerState.close() }; onGoFavorites()
-                }
-                DrawerItem("❤️", LanguageManager.t("vitals")) {
-                    scope.launch { drawerState.close() }; onGoVitals()
-                }
-                DrawerItem("💧", LanguageManager.t("water_tracker")) {
-                    scope.launch { drawerState.close() }; onGoWater()
-                }
-                DrawerItem("⭐", LanguageManager.t("my_level")) {
-                    scope.launch { drawerState.close() }; onGoLevel()
-                }
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                    Spacer(Modifier.height(8.dp))
 
-                ExpandableDrawerItem("📂", LanguageManager.t("more"), moreExpanded) {
-                    moreExpanded = !moreExpanded
-                }
-                if (moreExpanded) {
-                    DrawerItem("📊", LanguageManager.t("my_progress"), indent = true) {
+                    DrawerItem(IconList.Plan, stringResource(R.string.home_my_plan)) {
+                        scope.launch { drawerState.close() }; onGoQuestionnaire()
+                    }
+                    DrawerItem(IconList.Goal, stringResource(R.string.home_my_goals)) {
+                        scope.launch { drawerState.close() }; onGoGoals()
+                    }
+                    DrawerItem(IconList.Progress, stringResource(R.string.home_my_progress)) {
                         scope.launch { drawerState.close() }; onGoProgress()
                     }
-                    DrawerItem("💬", LanguageManager.t("nutritionist_ia"), indent = true) {
+                    DrawerItem(IconList.WeeklyReport, stringResource(R.string.home_weekly_report)) {
+                        scope.launch { drawerState.close() }; onGoWeeklyReport()
+                    }
+                    DrawerItem(IconList.Chat, stringResource(R.string.home_nutritionist_ia)) {
                         scope.launch { drawerState.close() }; onGoChat()
                     }
-                    DrawerItem("📸", LanguageManager.t("identify_food"), indent = true) {
+                    DrawerItem(IconList.IdentifyFood, stringResource(R.string.home_identify_food)) {
                         scope.launch { drawerState.close() }; onGoCamera()
                     }
-                    DrawerItem("🍽️", LanguageManager.t("food_history"), indent = true) {
+                    DrawerItem(IconList.History, stringResource(R.string.home_food_history)) {
                         scope.launch { drawerState.close() }; onGoFoodHistory()
                     }
-                    DrawerItem("🏋️", LanguageManager.t("exercise_log"), indent = true) {
+                    DrawerItem(IconList.Water, stringResource(R.string.home_water_tracker)) {
+                        scope.launch { drawerState.close() }; onGoWater()
+                    }
+                    DrawerItem(IconList.Exercise, stringResource(R.string.home_exercise_log)) {
                         scope.launch { drawerState.close() }; onGoExercise()
                     }
-                    DrawerItem("🏆", LanguageManager.t("achievements"), indent = true) {
+                    DrawerItem(IconList.Achievements, stringResource(R.string.home_achievements)) {
                         scope.launch { drawerState.close() }; onGoAchievements()
                     }
-                }
+                    DrawerItem(IconList.Level, stringResource(R.string.home_my_level)) {
+                        scope.launch { drawerState.close() }; onGoLevel()
+                    }
+                    DrawerItem(IconList.Settings, stringResource(R.string.home_settings)) {
+                        scope.launch { drawerState.close() }; onGoSettings()
+                    }
+                    DrawerItem(IconList.MealPlanner, stringResource(R.string.home_meal_planner)) {
+                        scope.launch { drawerState.close() }; onGoMealPlanner()
+                    }
+                    DrawerItem(IconList.Recipes, stringResource(R.string.home_recipes)) {
+                        scope.launch { drawerState.close() }; onGoRecipes()
+                    }
+                    DrawerItem(IconList.ShoppingList, stringResource(R.string.home_shopping_list)) {
+                        scope.launch { drawerState.close() }; onGoShoppingList()
+                    }
+                    DrawerItem(IconList.Favorites, stringResource(R.string.home_favorites)) {
+                        scope.launch { drawerState.close() }; onGoFavorites()
+                    }
+                    DrawerItem(IconList.MonthlyStats, stringResource(R.string.home_monthly_stats)) {
+                        scope.launch { drawerState.close() }; onGoMonthlyStats()
+                    }
+                    DrawerItem(IconList.Vitals, stringResource(R.string.home_vitals)) {
+                        scope.launch { drawerState.close() }; onGoVitals()
+                    }
 
-                DrawerItem("⚙️", LanguageManager.t("settings")) {
-                    scope.launch { drawerState.close() }; onGoSettings()
-                }
-                Spacer(Modifier.height(8.dp))
-                }
-
-                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-                NavigationDrawerItem(
-                    label = { Text(LanguageManager.t("logout"),
-                        color = Color.White.copy(alpha = 0.6f)) },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        FirebaseAuth.getInstance().signOut()
-                        onLogout()
-                    },
-                    colors = NavigationDrawerItemDefaults.colors(
-                        unselectedContainerColor = Color.Transparent
+                    Spacer(Modifier.height(24.dp))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.common_logout),
+                            color = Color.White.copy(alpha = 0.6f)) },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            FirebaseAuth.getInstance().signOut()
+                            onLogout()
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(
+                            unselectedContainerColor = Color.Transparent
+                        )
                     )
-                )
-                Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(24.dp))
+                }
             }
         }
     ) {
@@ -294,7 +298,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(LanguageManager.t("good_morning"), fontSize = 14.sp,
+                        Text(stringResource(R.string.home_good_morning), fontSize = 14.sp,
                             color = Color.White.copy(alpha = 0.7f))
                         Text(user.email?.substringBefore("@") ?: "User",
                             fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -308,7 +312,7 @@ fun HomeScreen(
                                     .background(Gold.copy(alpha = 0.2f))
                                     .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
-                                Text("🔥", fontSize = 16.sp)
+                                Icon(IconList.Fire, null, tint = IconList.FireOrange, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(4.dp))
                                 Text("$streakCurrent", fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold, color = Gold)
@@ -333,7 +337,6 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Tarjeta NIVEL/XP
                 Card(
                     onClick = onGoLevel,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -346,10 +349,16 @@ fun HomeScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(levelInfo.emoji, fontSize = 32.sp)
+                        Icon(IconList.getIconForLevel(levelInfo.level), null, tint = Gold, modifier = Modifier.size(32.dp))
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(levelInfo.title, fontSize = 15.sp,
+                            Text(stringResource(id = when(levelInfo.level){
+                                5 -> R.string.level_master
+                                4 -> R.string.level_expert
+                                3 -> R.string.level_athlete
+                                2 -> R.string.level_apprentice
+                                else -> R.string.level_beginner
+                            }), fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold, color = Gold)
                             Text("$userXP XP", fontSize = 13.sp,
                                 color = Color.White.copy(alpha = 0.6f))
@@ -359,14 +368,9 @@ fun HomeScreen(
                                     .clip(RoundedCornerShape(3.dp))
                                     .background(Color.White.copy(alpha = 0.2f))
                             ) {
-                                val lvlProgress by animateFloatAsState(
-                                    targetValue = levelInfo.progress.coerceIn(0f, 1f),
-                                    animationSpec = tween(durationMillis = 900),
-                                    label = "levelProgress"
-                                )
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxWidth(lvlProgress)
+                                        .fillMaxWidth(levelInfo.progress.coerceIn(0f, 1f))
                                         .fillMaxHeight()
                                         .clip(RoundedCornerShape(3.dp))
                                         .background(Gold)
@@ -380,7 +384,6 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // === DASHBOARD NUTRICIONAL ===
                 if (targets != null) {
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -390,7 +393,7 @@ fun HomeScreen(
                         )
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(LanguageManager.t("today_nutrition"),
+                            Text(stringResource(R.string.home_today_nutrition),
                                 fontSize = 13.sp, color = Color.White.copy(alpha = 0.7f),
                                 fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(12.dp))
@@ -398,92 +401,16 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                NutrientRing("🔥", totalsCalories, targets!!.calories, Gold)
-                                NutrientRing("💪", totalsProtein, targets!!.proteinG, Color(0xFF42A5F5))
-                                NutrientRing("🍞", totalsCarbs, targets!!.carbsG, Color(0xFFFFA726))
-                                NutrientRing("🥑", totalsFat, targets!!.fatG, Color(0xFF66BB6A))
+                                NutrientRing(IconList.Fire, totalsCalories, targets!!.calories, Gold)
+                                NutrientRing(IconList.Protein, totalsProtein, targets!!.proteinG, Color(0xFF42A5F5))
+                                NutrientRing(IconList.Carbs, totalsCarbs, targets!!.carbsG, Color(0xFFFFA726))
+                                NutrientRing(IconList.Fat, totalsFat, targets!!.fatG, Color(0xFF66BB6A))
                             }
                         }
                     }
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // === DAILY CHALLENGE ===
-                challenge?.let { c ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (c.completed) Gold.copy(alpha = 0.25f)
-                            else Color(0xFF673AB7).copy(alpha = 0.35f)
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("⚔️", fontSize = 18.sp)
-                                Spacer(Modifier.width(6.dp))
-                                Text(LanguageManager.t("daily_challenge"),
-                                    fontSize = 12.sp,
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    fontWeight = FontWeight.SemiBold)
-                                Spacer(Modifier.weight(1f))
-                                Text("+${c.challenge.xpReward} XP",
-                                    fontSize = 12.sp,
-                                    color = Gold,
-                                    fontWeight = FontWeight.Bold)
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(c.challenge.emoji, fontSize = 36.sp)
-                                Spacer(Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(LanguageManager.t(c.challenge.titleKey),
-                                        fontSize = 16.sp, fontWeight = FontWeight.Bold,
-                                        color = Color.White)
-                                    Text(LanguageManager.t(c.challenge.descKey),
-                                        fontSize = 12.sp,
-                                        color = Color.White.copy(alpha = 0.7f),
-                                        lineHeight = 16.sp)
-                                }
-                            }
-                            Spacer(Modifier.height(10.dp))
-                            if (c.completed) {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                                        .background(Gold.copy(alpha = 0.3f))
-                                        .padding(vertical = 8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("✅ ${LanguageManager.t("challenge_completed")}",
-                                        fontSize = 13.sp, color = Gold,
-                                        fontWeight = FontWeight.Bold)
-                                }
-                            } else {
-                                Button(
-                                    onClick = {
-                                        DailyChallengeManager.markCompleted { xp ->
-                                            if (xp > 0) {
-                                                challenge = c.copy(completed = true)
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxWidth().height(40.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Gold,
-                                        contentColor = DeepBlue
-                                    )
-                                ) {
-                                    Text(LanguageManager.t("mark_complete"),
-                                        fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp))
-                }
-
-                // === WATER CARD ===
                 if (targets != null) {
                     Card(
                         onClick = onGoWater,
@@ -497,13 +424,13 @@ fun HomeScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("💧", fontSize = 32.sp)
+                            Icon(IconList.Water, null, tint = IconList.WaterBlue, modifier = Modifier.size(32.dp))
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(LanguageManager.t("water_tracker"),
+                                Text(stringResource(R.string.home_water_tracker),
                                     fontSize = 13.sp, color = Color.White.copy(alpha = 0.8f),
                                     fontWeight = FontWeight.SemiBold)
-                                Text("${waterMl} / ${targets!!.waterMl} ml",
+                                Text("$waterMl / ${targets!!.waterMl} ml",
                                     fontSize = 18.sp, fontWeight = FontWeight.Bold,
                                     color = Color.White)
                                 Spacer(Modifier.height(6.dp))
@@ -512,13 +439,8 @@ fun HomeScreen(
                                         .clip(RoundedCornerShape(3.dp))
                                         .background(Color.White.copy(alpha = 0.2f))
                                 ) {
-                                    val wTarget = (waterMl.toFloat() / targets!!.waterMl)
+                                    val wProgress = (waterMl.toFloat() / targets!!.waterMl)
                                         .coerceIn(0f, 1f)
-                                    val wProgress by animateFloatAsState(
-                                        targetValue = wTarget,
-                                        animationSpec = tween(durationMillis = 900),
-                                        label = "waterProgress"
-                                    )
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth(wProgress).fillMaxHeight()
@@ -533,7 +455,6 @@ fun HomeScreen(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // === PLAN CARD ===
                 Card(
                     onClick = onGoQuestionnaire,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -546,14 +467,14 @@ fun HomeScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("📋", fontSize = 28.sp)
+                        Icon(IconList.Plan, null, tint = Gold, modifier = Modifier.size(28.dp))
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(LanguageManager.t("my_plan"),
+                            Text(stringResource(R.string.home_my_plan),
                                 fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Gold)
                             Text(
-                                if (hasPlan) LanguageManager.t("update_my_plan")
-                                else LanguageManager.t("generate_plan"),
+                                if (hasPlan) stringResource(R.string.home_update_plan)
+                                else stringResource(R.string.home_generate_plan),
                                 fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f)
                             )
                         }
@@ -571,12 +492,17 @@ fun HomeScreen(
                     )
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        Text(LanguageManager.t("today_mood"), fontSize = 13.sp,
+                        Text(stringResource(R.string.mood_daily_tip), fontSize = 13.sp,
                             color = Color.White.copy(alpha = 0.6f))
                         Spacer(Modifier.height(8.dp))
                         if (todayMood.isNotEmpty()) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(todayMoodEmoji, fontSize = 36.sp)
+                                Icon(
+                                    imageVector = IconList.getIconForMood(todayMoodId),
+                                    contentDescription = null,
+                                    tint = IconList.getColorForMood(todayMoodId),
+                                    modifier = Modifier.size(36.dp)
+                                )
                                 Spacer(Modifier.width(12.dp))
                                 Column {
                                     Text(todayMood, fontSize = 18.sp,
@@ -592,9 +518,9 @@ fun HomeScreen(
                             }
                         } else {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("😊", fontSize = 36.sp)
+                                Icon(IconList.Mood, null, tint = IconList.MoodYellow, modifier = Modifier.size(36.dp))
                                 Spacer(Modifier.width(12.dp))
-                                Text(LanguageManager.t("how_are_you"),
+                                Text(stringResource(R.string.mood_how_are_you),
                                     fontSize = 14.sp,
                                     color = Color.White.copy(alpha = 0.7f))
                             }
@@ -612,7 +538,7 @@ fun HomeScreen(
                     )
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        Text(LanguageManager.t("daily_tip"), fontSize = 13.sp,
+                        Text(stringResource(R.string.mood_daily_tip), fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold, color = Gold)
                         Spacer(Modifier.height(8.dp))
                         if (isLoadingTip) {
@@ -632,7 +558,7 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(28.dp))
 
-                Text(LanguageManager.t("quick_access"), fontSize = 16.sp,
+                Text(stringResource(R.string.home_quick_access), fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White.copy(alpha = 0.8f),
                     modifier = Modifier.padding(horizontal = 24.dp))
@@ -643,18 +569,18 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    QuickCard("📸", LanguageManager.t("identify_food"), Modifier.weight(1f), onGoCamera)
-                    QuickCard("💬", LanguageManager.t("nutritionist_ia"), Modifier.weight(1f), onGoChat)
-                    QuickCard("🏋️", LanguageManager.t("exercise_log"), Modifier.weight(1f), onGoExercise)
+                    QuickCard(IconList.Camera, stringResource(R.string.home_identify_food), Modifier.weight(1f), onGoCamera)
+                    QuickCard(IconList.Chat, stringResource(R.string.home_nutritionist_ia), Modifier.weight(1f), onGoChat)
+                    QuickCard(IconList.Exercise, stringResource(R.string.home_exercise_log), Modifier.weight(1f), onGoExercise)
                 }
                 Spacer(Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    QuickCard("📊", LanguageManager.t("my_progress"), Modifier.weight(1f), onGoProgress)
-                    QuickCard("🍽️", LanguageManager.t("food_history"), Modifier.weight(1f), onGoFoodHistory)
-                    QuickCard("🏆", LanguageManager.t("achievements"), Modifier.weight(1f), onGoAchievements)
+                    QuickCard(IconList.Progress, stringResource(R.string.home_my_progress), Modifier.weight(1f), onGoProgress)
+                    QuickCard(IconList.History, stringResource(R.string.home_food_history), Modifier.weight(1f), onGoFoodHistory)
+                    QuickCard(IconList.Achievements, stringResource(R.string.home_achievements), Modifier.weight(1f), onGoAchievements)
                 }
 
                 Spacer(Modifier.height(40.dp))
@@ -664,18 +590,8 @@ fun HomeScreen(
 }
 
 @Composable
-private fun NutrientRing(emoji: String, current: Int, target: Int, color: Color) {
-    val targetProgress = (current.toFloat() / target.coerceAtLeast(1)).coerceIn(0f, 1f)
-    val progress by animateFloatAsState(
-        targetValue = targetProgress,
-        animationSpec = tween(durationMillis = 900),
-        label = "ringProgress"
-    )
-    val animatedCurrent by animateIntAsState(
-        targetValue = current,
-        animationSpec = tween(durationMillis = 900),
-        label = "ringValue"
-    )
+private fun NutrientRing(icon: ImageVector, current: Int, target: Int, color: Color) {
+    val progress = (current.toFloat() / target.coerceAtLeast(1)).coerceIn(0f, 1f)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier.size(64.dp),
@@ -702,56 +618,26 @@ private fun NutrientRing(emoji: String, current: Int, target: Int, color: Color)
                     style = Stroke(width = stroke, cap = StrokeCap.Round)
                 )
             }
-            Text(emoji, fontSize = 22.sp)
+            Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
         }
         Spacer(Modifier.height(4.dp))
-        Text("$animatedCurrent", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Text("$current", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
         Text("/ $target", fontSize = 10.sp, color = Color.White.copy(alpha = 0.5f))
     }
 }
 
 @Composable
-fun DrawerItem(emoji: String, title: String, indent: Boolean = false, onClick: () -> Unit) {
+fun DrawerItem(icon: ImageVector, title: String, onClick: () -> Unit) {
     NavigationDrawerItem(
         label = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(emoji, fontSize = if (indent) 17.sp else 20.sp)
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    title,
-                    color = if (indent) Color.White.copy(alpha = 0.8f) else Color.White,
-                    fontSize = if (indent) 14.sp else 15.sp
-                )
-            }
-        },
-        selected = false,
-        onClick = onClick,
-        colors = NavigationDrawerItemDefaults.colors(
-            unselectedContainerColor = Color.Transparent
-        ),
-        modifier = Modifier.padding(start = if (indent) 24.dp else 8.dp, end = 8.dp)
-    )
-}
-
-@Composable
-fun ExpandableDrawerItem(emoji: String, title: String, expanded: Boolean, onClick: () -> Unit) {
-    NavigationDrawerItem(
-        label = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(emoji, fontSize = 20.sp)
+                Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(12.dp))
                 Text(title, color = Color.White, fontSize = 15.sp)
             }
         },
         selected = false,
         onClick = onClick,
-        badge = {
-            Icon(
-                imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                contentDescription = null,
-                tint = Color.White.copy(alpha = 0.6f)
-            )
-        },
         colors = NavigationDrawerItemDefaults.colors(
             unselectedContainerColor = Color.Transparent
         ),
@@ -760,7 +646,7 @@ fun ExpandableDrawerItem(emoji: String, title: String, expanded: Boolean, onClic
 }
 
 @Composable
-fun QuickCard(emoji: String, title: String, modifier: Modifier, onClick: () -> Unit) {
+fun QuickCard(icon: ImageVector, title: String, modifier: Modifier, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = modifier,
@@ -773,7 +659,7 @@ fun QuickCard(emoji: String, title: String, modifier: Modifier, onClick: () -> U
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(emoji, fontSize = 28.sp)
+            Icon(icon, null, tint = Gold, modifier = Modifier.size(28.dp))
             Spacer(Modifier.height(4.dp))
             Text(title, fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold, color = Color.White,

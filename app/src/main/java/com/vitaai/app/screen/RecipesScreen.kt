@@ -8,9 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.callOpenAI
 import kotlinx.coroutines.launch
@@ -29,6 +33,7 @@ private data class Recipe(
 @Composable
 fun RecipesScreen(modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var ingredients by remember { mutableStateOf("") }
     var recipes by remember { mutableStateOf<List<Recipe>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
@@ -89,18 +94,23 @@ fun RecipesScreen(modifier: Modifier = Modifier) {
 
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
         Spacer(Modifier.height(8.dp))
-        Text("📖 ${LanguageManager.t("recipes")}",
-            fontSize = 24.sp, fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
-        Text(LanguageManager.t("recipes_subtitle"),
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(IconList.Recipes, contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.home_recipes),
+                fontSize = 24.sp, fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary)
+        }
+        Text(stringResource(R.string.recipes_subtitle),
             fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
         Spacer(Modifier.height(16.dp))
 
         OutlinedTextField(
             value = ingredients,
             onValueChange = { ingredients = it },
-            label = { Text(LanguageManager.t("available_ingredients")) },
-            placeholder = { Text(LanguageManager.t("ingredients_example")) },
+            label = { Text(stringResource(R.string.recipes_ingredients_label)) },
+            placeholder = { Text(stringResource(R.string.recipes_ingredients_hint)) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 80.dp),
             shape = RoundedCornerShape(12.dp),
             minLines = 2,
@@ -113,7 +123,7 @@ fun RecipesScreen(modifier: Modifier = Modifier) {
                 loading = true; recipes = emptyList(); errorMsg = ""; expandedIdx = -1
                 scope.launch {
                     try { generate() } catch (e: Exception) {
-                        errorMsg = LanguageManager.t("chat_error") + ": ${e.message}"
+                        errorMsg = context.getString(R.string.chat_error) + ": ${e.message}"
                     }
                     loading = false
                 }
@@ -123,8 +133,8 @@ fun RecipesScreen(modifier: Modifier = Modifier) {
             enabled = !loading && ingredients.isNotBlank()
         ) {
             Text(
-                if (loading) LanguageManager.t("generating_recipes")
-                else LanguageManager.t("generate_recipes"),
+                if (loading) stringResource(R.string.recipes_generating)
+                else stringResource(R.string.recipes_generate),
                 fontSize = 15.sp
             )
         }
@@ -136,6 +146,11 @@ fun RecipesScreen(modifier: Modifier = Modifier) {
         }
 
         recipes.forEachIndexed { idx, r ->
+            val diffRes = when (r.difficulty.lowercase()) {
+                "easy" -> R.string.diff_easy
+                "hard" -> R.string.diff_hard
+                else -> R.string.diff_medium
+            }
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                 shape = RoundedCornerShape(16.dp)
@@ -144,16 +159,16 @@ fun RecipesScreen(modifier: Modifier = Modifier) {
                     Text(r.name, fontSize = 17.sp, fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary)
                     Text(
-                        "⏱️ ${r.time}  ·  🔥 ${r.calories} kcal  ·  ${difficultyEmoji(r.difficulty)} ${LanguageManager.t("diff_" + r.difficulty)}",
+                        "${r.time}  ·  ${r.calories} kcal  ·  ${stringResource(diffRes)}",
                         fontSize = 12.sp, color = MaterialTheme.colorScheme.outline
                     )
                     Spacer(Modifier.height(8.dp))
                     if (expandedIdx == idx) {
-                        Text("🛒 ${LanguageManager.t("ingredients")}:",
+                        Text("${stringResource(R.string.recipes_ingredients)}:",
                             fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         r.ingredients.forEach { Text("• $it", fontSize = 13.sp, lineHeight = 20.sp) }
                         Spacer(Modifier.height(8.dp))
-                        Text("👨‍🍳 ${LanguageManager.t("steps")}:",
+                        Text("${stringResource(R.string.recipes_steps)}:",
                             fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         r.steps.forEachIndexed { i, s ->
                             Text("${i + 1}. $s", fontSize = 13.sp, lineHeight = 20.sp)
@@ -163,21 +178,17 @@ fun RecipesScreen(modifier: Modifier = Modifier) {
                             onClick = { expandedIdx = -1 },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(10.dp)
-                        ) { Text(LanguageManager.t("collapse"), fontSize = 13.sp) }
+                        ) { Text(stringResource(R.string.recipes_collapse), fontSize = 13.sp) }
                     } else {
                         Button(
                             onClick = { expandedIdx = idx },
                             modifier = Modifier.fillMaxWidth().height(40.dp),
                             shape = RoundedCornerShape(10.dp)
-                        ) { Text(LanguageManager.t("view_recipe"), fontSize = 13.sp) }
+                        ) { Text(stringResource(R.string.recipes_view), fontSize = 13.sp) }
                     }
                 }
             }
         }
         Spacer(Modifier.height(32.dp))
     }
-}
-
-private fun difficultyEmoji(d: String): String = when (d.lowercase()) {
-    "easy" -> "🟢"; "hard" -> "🔴"; else -> "🟡"
 }

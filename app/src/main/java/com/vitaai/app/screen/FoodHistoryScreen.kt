@@ -1,8 +1,10 @@
 package com.vitaai.app.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -12,6 +14,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -19,11 +24,10 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.vitaai.app.utils.LanguageManager
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
+import com.vitaai.app.utils.DateUtils
 import com.vitaai.app.utils.NutritionLog
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 data class FoodEntry(
     val id: String,
@@ -41,6 +45,7 @@ data class FoodEntry(
 fun FoodHistoryScreen(modifier: Modifier = Modifier) {
     val db = FirebaseFirestore.getInstance()
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    val context = LocalContext.current
     var entries by remember { mutableStateOf<List<FoodEntry>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var firestoreError by remember { mutableStateOf("") }
@@ -58,7 +63,7 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
             .limit(100)
             .addSnapshotListener { snap, error ->
                 if (error != null) {
-                    firestoreError = LanguageManager.t("error_saving") + (error.message ?: "")
+                    firestoreError = context.getString(R.string.common_error_saving) + (error.message ?: "")
                     isLoading = false
                     return@addSnapshotListener
                 }
@@ -88,8 +93,15 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    imageVector = IconList.Diet,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.width(8.dp))
                 Text(
-                    "🍽️ ${LanguageManager.t("food_history")}",
+                    stringResource(R.string.food_history_title),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -117,7 +129,7 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
                 }
             } else if (entries.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(LanguageManager.t("no_food_yet"),
+                    Text(stringResource(R.string.food_history_no_data),
                         color = MaterialTheme.colorScheme.outline, fontSize = 14.sp)
                 }
             } else {
@@ -145,12 +157,17 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
                                     modifier = Modifier.padding(12.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    val emoji = when (entry.rating.lowercase()) {
-                                        "healthy", "saludable", "sain", "saudável", "健康" -> "🟢"
-                                        "avoid", "evitar", "éviter", "避免" -> "🔴"
-                                        else -> "🟡"
+                                    val ratingColor = when (entry.rating.lowercase()) {
+                                        "healthy", "saludable", "sain", "saudável", "健康" -> IconList.PlantGreen
+                                        "avoid", "evitar", "éviter", "避免" -> IconList.TargetRed
+                                        else -> IconList.CarbsOrange
                                     }
-                                    Text(emoji, fontSize = 22.sp)
+                                    Box(
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .clip(CircleShape)
+                                            .background(ratingColor)
+                                    )
                                     Spacer(Modifier.width(10.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
@@ -170,7 +187,7 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
                                         }
                                     ) {
                                         Icon(Icons.Default.Delete,
-                                            contentDescription = null,
+                                            contentDescription = stringResource(R.string.common_delete),
                                             tint = MaterialTheme.colorScheme.outline)
                                     }
                                 }
@@ -195,20 +212,20 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text(LanguageManager.t("add_food")) },
+            title = { Text(stringResource(R.string.food_add_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = manualName,
                         onValueChange = { manualName = it },
-                        label = { Text(LanguageManager.t("food_name")) },
+                        label = { Text(stringResource(R.string.food_name_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     OutlinedTextField(
                         value = manualCalories,
                         onValueChange = { manualCalories = it },
-                        label = { Text(LanguageManager.t("calories")) },
+                        label = { Text(stringResource(R.string.calories_label)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -246,7 +263,7 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
             },
             confirmButton = {
                 TextButton(onClick = {
-                    val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+                    val today = DateUtils.todayKey()
                     val cal = manualCalories.toIntOrNull() ?: 0
                     val pro = manualProtein.toIntOrNull() ?: 0
                     val car = manualCarbs.toIntOrNull() ?: 0
@@ -270,13 +287,13 @@ fun FoodHistoryScreen(modifier: Modifier = Modifier) {
                             manualCarbs = ""; manualFat = ""; saveError = ""
                         }
                         .addOnFailureListener { e ->
-                            saveError = LanguageManager.t("error_saving") + (e.message ?: "")
+                            saveError = context.getString(R.string.common_error_saving) + (e.message ?: "")
                         }
-                }) { Text(LanguageManager.t("save")) }
+                }) { Text(stringResource(R.string.common_save)) }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
-                    Text(LanguageManager.t("cancel"))
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )

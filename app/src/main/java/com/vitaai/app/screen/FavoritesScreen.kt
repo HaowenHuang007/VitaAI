@@ -11,12 +11,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.utils.FavoritesManager
-import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.StreakManager
 
 @Composable
@@ -33,7 +35,10 @@ fun FavoritesScreen(modifier: Modifier = Modifier) {
     ) {
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("⭐ ${LanguageManager.t("favorites")}",
+            Icon(IconList.Favorites, contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.home_favorites),
                 fontSize = 24.sp, fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f))
@@ -42,7 +47,7 @@ fun FavoritesScreen(modifier: Modifier = Modifier) {
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(LanguageManager.t("favorites_subtitle"),
+        Text(stringResource(R.string.favorites_subtitle),
             fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
         Spacer(Modifier.height(16.dp))
 
@@ -69,7 +74,7 @@ fun FavoritesScreen(modifier: Modifier = Modifier) {
         if (favorites.isEmpty()) {
             Box(Modifier.fillMaxWidth().padding(top = 32.dp),
                 contentAlignment = Alignment.Center) {
-                Text(LanguageManager.t("no_favorites"),
+                Text(stringResource(R.string.favorites_empty),
                     color = MaterialTheme.colorScheme.outline, fontSize = 14.sp)
             }
         } else {
@@ -96,17 +101,17 @@ fun FavoritesScreen(modifier: Modifier = Modifier) {
                             onClick = {
                                 FavoritesManager.logUse(fav) {
                                     StreakManager.recordActivity()
-                                    logMsg = "✅ ${fav.name} +${fav.calories} kcal"
+                                    logMsg = "${fav.name} +${fav.calories} kcal"
                                     reload()
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.height(36.dp)
-                        ) { Text("+ ${LanguageManager.t("log")}", fontSize = 12.sp) }
+                        ) { Text("+ ${stringResource(R.string.favorites_log)}", fontSize = 12.sp) }
                         IconButton(onClick = {
                             FavoritesManager.delete(fav.id) { reload() }
                         }) {
-                            Icon(Icons.Default.Delete, contentDescription = null,
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.common_delete),
                                 tint = MaterialTheme.colorScheme.outline)
                         }
                     }
@@ -127,12 +132,12 @@ private fun AddFavoriteCard(onSaved: () -> Unit) {
 
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(LanguageManager.t("add_favorite"),
+            Text(stringResource(R.string.favorites_add_title),
                 fontSize = 15.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = name, onValueChange = { name = it },
-                label = { Text(LanguageManager.t("food_name")) },
+                label = { Text(stringResource(R.string.food_name_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp), singleLine = true
             )
@@ -188,7 +193,7 @@ private fun AddFavoriteCard(onSaved: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 enabled = name.isNotBlank() && (cal.toIntOrNull() ?: 0) > 0
-            ) { Text(LanguageManager.t("save"), fontSize = 14.sp) }
+            ) { Text(stringResource(R.string.common_save), fontSize = 14.sp) }
         }
     }
 }
