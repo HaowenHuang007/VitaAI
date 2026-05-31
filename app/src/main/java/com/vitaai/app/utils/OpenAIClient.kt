@@ -1,80 +1,72 @@
 package com.vitaai.app.utils
 
-/**
- * AI client: calls a Cloudflare Worker that proxies the OpenAI API.
- *
- * The worker talks to OpenAI (gpt-4o-mini). See /cloudflare-worker/worker.js.
- *
- * Why a proxy? So the API key never ships inside the APK.
- * Auth: every call carries the current Firebase user's ID token.
- */
-
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.concurrent.TimeUnit
+import java.net.HttpURLConnection
+import java.net.URL
 
-private const val WORKER_BASE_URL = "https://vitaai-proxy.hhw610888.workers.dev"
+// TODO: Move this key to a secure backend — never ship API keys in the APK
+private const val OPENAI_API_KEY = "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"
+private const val OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+private const val TIMEOUT_MS = 30_000
 
-private val httpClient: OkHttpClient = OkHttpClient.Builder()
-    .connectTimeout(30, TimeUnit.SECONDS)
-    .readTimeout(60, TimeUnit.SECONDS)
-    .writeTimeout(60, TimeUnit.SECONDS)
-    .build()
-
-private val JSON_MEDIA = "application/json; charset=utf-8".toMediaType()
-
-private suspend fun firebaseIdToken(): String {
-    val user = Firebase.auth.currentUser
-        ?: throw IllegalStateException("Not signed in")
-    return user.getIdToken(false).await().token
-        ?: throw IllegalStateException("Failed to obtain Firebase ID token")
+private fun openConnection(): HttpURLConnection {
+    val connection = URL(OPENAI_URL).openConnection() as HttpURLConnection
+    connection.requestMethod = "POST"
+    connection.setRequestProperty("Content-Type", "application/json")
+    connection.setRequestProperty("Authorization", "Bearer $OPENAI_API_KEY")
+    connection.connectTimeout = TIMEOUT_MS
+    connection.readTimeout = TIMEOUT_MS
+    connection.doOutput = true
+    return connection
 }
 
-private suspend fun callWorker(path: String, payload: JSONObject): String {
-    val token = firebaseIdToken()
-    val request = Request.Builder()
-        .url("$WORKER_BASE_URL$path")
-        .header("Authorization", "Bearer $token")
-        .post(payload.toString().toRequestBody(JSON_MEDIA))
-        .build()
+private fun HttpURLConnection.readResponse(): String =
+    try { inputStream.bufferedReader().readText() }
+    catch (e: Exception) { errorStream?.bufferedReader()?.readText() ?: throw e }
 
-    return withContext(Dispatchers.IO) {
-        httpClient.newCall(request).execute().use { resp ->
-            val body = resp.body?.string().orEmpty()
-            if (!resp.isSuccessful) {
-                throw RuntimeException("AI worker error ${resp.code}: ${body.take(300)}")
-            }
-            JSONObject(body).optString("content", "")
-        }
-    }
+private fun String.extractContent(): String =
+    JSONObject(this).getJSONArray("choices")
+        .getJSONObject(0).getJSONObject("message").getString("content")
+
+suspend fun callOpenAI(prompt: String): String = withContext(Dispatchers.IO) {
+    val connection = openConnection()
+    val body = JSONObject().apply {
+        put("model", "gpt-4o-mini")
+        put("messages", JSONArray().apply {
+            put(JSONObject().apply {
+                put("role", "system")
+                put("content", "You are an expert nutritionist. Always respond in valid JSON. Values must be plain text, never nested JSON.")
+            })
+            put(JSONObject().apply { put("role", "user"); put("content", prompt) })
+        })
+        put("max_tokens", 1500)
+        put("temperature", 0.7)
+    }.toString()
+    connection.outputStream.write(body.toByteArray())
+    connection.readResponse().extractContent()
 }
-
-suspend fun callOpenAI(prompt: String): String =
-    callWorker("/chat", JSONObject().put("prompt", prompt))
 
 // history: list of (role, content) pairs — role is "user" or "assistant"
-suspend fun callOpenAIWithHistory(
-    systemPrompt: String,
-    history: List<Pair<String, String>>
-): String {
-    val historyJson = JSONArray()
-    for ((role, content) in history) {
-        historyJson.put(JSONObject().put("role", role).put("content", content))
+suspend fun callOpenAIWithHistory(systemPrompt: String, history: List<Pair<String, String>>): String =
+    withContext(Dispatchers.IO) {
+        val connection = openConnection()
+        val body = JSONObject().apply {
+            put("model", "gpt-4o-mini")
+            put("messages", JSONArray().apply {
+                put(JSONObject().apply { put("role", "system"); put("content", systemPrompt) })
+                history.forEach { (role, content) ->
+                    put(JSONObject().apply { put("role", role); put("content", content) })
+                }
+            })
+            put("max_tokens", 500)
+            put("temperature", 0.7)
+        }.toString()
+        connection.outputStream.write(body.toByteArray())
+        connection.readResponse().extractContent()
     }
-    return callWorker(
-        "/chat-with-history",
-        JSONObject().put("systemPrompt", systemPrompt).put("history", historyJson)
-    )
-}
 
 data class FoodAnalysis(
     val name: String,
@@ -87,34 +79,67 @@ data class FoodAnalysis(
     val displayText: String
 )
 
-suspend fun analyzeImageWithOpenAI(
-    base64Image: String,
-    language: String = "Spanish"
-): FoodAnalysis {
-    val raw = callWorker(
-        "/analyze-image",
-        JSONObject().put("base64Image", base64Image).put("language", language)
-    )
-    val cleaned = raw.trim()
-        .removePrefix("```json").removePrefix("```")
-        .removeSuffix("```").trim()
-    val json = JSONObject(cleaned)
-    val name = json.optString("name", "?")
-    val calories = json.optInt("calories", 0)
-    val protein = json.optInt("protein", 0)
-    val carbs = json.optInt("carbs", 0)
-    val fat = json.optInt("fat", 0)
-    val rating = json.optString("rating", "moderate")
-    val tip = json.optString("tip", "")
+suspend fun analyzeImageWithOpenAI(base64Image: String, language: String = "Spanish"): FoodAnalysis =
+    withContext(Dispatchers.IO) {
+        val connection = openConnection()
+        val body = JSONObject().apply {
+            put("model", "gpt-4o-mini")
+            put("messages", JSONArray().apply {
+                put(JSONObject().apply {
+                    put("role", "system")
+                    put("content", "You are an expert nutritionist. Always respond in valid JSON only, no markdown fences. All textual fields must be in $language.")
+                })
+                put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", JSONArray().apply {
+                        put(JSONObject().apply {
+                            put("type", "text")
+                            put("text", """
+                                Analyze the food in this image. Return strict JSON with these keys:
+                                {
+                                  "name": "food name",
+                                  "calories": integer (kcal for the visible portion),
+                                  "protein": integer (grams),
+                                  "carbs": integer (grams),
+                                  "fat": integer (grams),
+                                  "rating": one of "healthy"|"moderate"|"avoid",
+                                  "tip": "one brief nutritional tip"
+                                }
+                                If unsure, give your best estimate. No text outside the JSON.
+                            """.trimIndent())
+                        })
+                        put(JSONObject().apply {
+                            put("type", "image_url")
+                            put("image_url", JSONObject().apply {
+                                put("url", "data:image/jpeg;base64,$base64Image")
+                            })
+                        })
+                    })
+                })
+            })
+            put("response_format", JSONObject().apply { put("type", "json_object") })
+            put("max_tokens", 400)
+        }.toString()
+        connection.outputStream.write(body.toByteArray())
+        val raw = connection.readResponse().extractContent()
+        val cleaned = raw.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+        val json = JSONObject(cleaned)
+        val name = json.optString("name", "?")
+        val calories = json.optInt("calories", 0)
+        val protein = json.optInt("protein", 0)
+        val carbs = json.optInt("carbs", 0)
+        val fat = json.optInt("fat", 0)
+        val rating = json.optString("rating", "moderate")
+        val tip = json.optString("tip", "")
 
-    val display = buildString {
-        append("🍽️ ").append(name).append("\n")
-        append("🔥 ").append(calories).append(" kcal\n")
-        append("💪 ").append(protein).append("g\n")
-        append("🍞 ").append(carbs).append("g\n")
-        append("🥑 ").append(fat).append("g\n")
-        append("✅ ").append(rating).append("\n")
-        if (tip.isNotBlank()) append("💡 ").append(tip)
+        val display = buildString {
+            append("🍽️ ").append(name).append("\n")
+            append("🔥 ").append(calories).append(" kcal\n")
+            append("💪 ").append(protein).append("g\n")
+            append("🍞 ").append(carbs).append("g\n")
+            append("🥑 ").append(fat).append("g\n")
+            append("✅ ").append(rating).append("\n")
+            if (tip.isNotBlank()) append("💡 ").append(tip)
+        }
+        FoodAnalysis(name, calories, protein, carbs, fat, rating, tip, display)
     }
-    return FoodAnalysis(name, calories, protein, carbs, fat, rating, tip, display)
-}
