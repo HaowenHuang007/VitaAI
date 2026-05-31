@@ -1,5 +1,6 @@
 package com.vitaai.app.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
@@ -65,9 +68,15 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onGoLogin: () -> Unit) {
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Gold.copy(alpha = 0.2f)),
+                    .background(Color(0xFF010721)),
                 contentAlignment = Alignment.Center
-            ) { Text("🌱", fontSize = 48.sp) }
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.logo_mark),
+                    contentDescription = "VitaAI",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
             Text("Crear cuenta", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Gold)

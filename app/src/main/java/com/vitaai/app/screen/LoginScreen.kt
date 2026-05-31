@@ -3,6 +3,7 @@ package com.vitaai.app.screen
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -230,9 +232,15 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Gold.copy(alpha = 0.2f)),
+                    .background(Color(0xFF010721)),
                 contentAlignment = Alignment.Center
-            ) { Text("🌿", fontSize = 48.sp) }
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.logo_mark),
+                    contentDescription = "VitaAI",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
             Text("VitaAI", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = Gold)

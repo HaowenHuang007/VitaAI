@@ -1,5 +1,6 @@
 package com.vitaai.app.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,10 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
 import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.XPManager
 import com.vitaai.app.utils.callOpenAIWithHistory
@@ -48,11 +52,11 @@ fun ChatScreen(modifier: Modifier = Modifier) {
     }
 
     val welcomeMsg = when(LanguageManager.currentLanguage.value) {
-        "en" -> "Hi! I'm your personal AI nutritionist 🥗 I can help with food advice, analyze your meals and adjust your plan. How can I help you today?"
-        "zh" -> "你好！我是你的AI私人营养师 🥗 我可以帮你提供饮食建议、分析你的饮食并调整你的计划。今天需要什么帮助？"
-        "fr" -> "Bonjour! Je suis votre nutritionniste IA personnel 🥗 Je peux vous aider avec des conseils alimentaires. Comment puis-je vous aider?"
-        "pt" -> "Olá! Sou seu nutricionista IA pessoal 🥗 Posso ajudá-lo com conselhos alimentares. Como posso ajudá-lo hoje?"
-        else -> "¡Hola! Soy tu nutricionista personal IA 🥗 Puedo ayudarte con consejos de alimentación, analizar tus comidas y ajustar tu plan. ¿En qué te ayudo hoy?"
+        "en" -> "Hi! I'm Aira, your personal AI nutritionist 🥗 I can help with food advice, analyze your meals and adjust your plan. How can I help you today?"
+        "zh" -> "你好！我是Aira，你的AI私人营养师 🥗 我可以帮你提供饮食建议、分析你的饮食并调整你的计划。今天需要什么帮助？"
+        "fr" -> "Bonjour! Je suis Aira, votre nutritionniste IA personnelle 🥗 Je peux vous aider avec des conseils alimentaires. Comment puis-je vous aider?"
+        "pt" -> "Olá! Sou Aira, sua nutricionista IA pessoal 🥗 Posso ajudá-lo com conselhos alimentares. Como posso ajudá-lo hoje?"
+        else -> "¡Hola! Soy Aira, tu nutricionista personal IA 🥗 Puedo ayudarte con consejos de alimentación, analizar tus comidas y ajustar tu plan. ¿En qué te ayudo hoy?"
     }
 
     var messages by remember {
@@ -124,7 +128,7 @@ fun ChatScreen(modifier: Modifier = Modifier) {
                     scope.launch {
                         try {
                             val systemContext = """
-                                You are an expert nutritionist and personal trainer, empathetic and motivating.
+                                You are Aira, an expert AI nutritionist and personal trainer, empathetic and motivating. Your name is Aira.
                                 USER PROFILE: $userProfile
                                 RULES:
                                 - Remember EVERYTHING the user has said in this conversation
@@ -132,6 +136,7 @@ fun ChatScreen(modifier: Modifier = Modifier) {
                                 - ALWAYS respond in $langName
                                 - Be concise but useful, max 4 sentences
                                 - Use emojis occasionally
+                                - Always introduce yourself as Aira if asked
                             """.trimIndent()
                             val history = messages.map { msg ->
                                 Pair(if (msg.isUser) "user" else "assistant", msg.content)
@@ -163,9 +168,15 @@ fun ChatBubble(msg: ChatMessage) {
         if (!msg.isUser) {
             Box(
                 modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(Color(0xFF010721)),
                 contentAlignment = Alignment.Center
-            ) { Text("🤖", fontSize = 16.sp) }
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.logo_mark),
+                    contentDescription = "VitaAI",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
             Spacer(Modifier.width(8.dp))
         }
         Box(

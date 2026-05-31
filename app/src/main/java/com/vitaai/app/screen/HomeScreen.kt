@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -24,11 +25,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
@@ -158,9 +161,15 @@ fun HomeScreen(
                         Box(
                             modifier = Modifier.size(60.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Gold.copy(alpha = 0.2f)),
+                                .background(Color(0xFF010721)),
                             contentAlignment = Alignment.Center
-                        ) { Text("🌿", fontSize = 30.sp) }
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.logo_mark),
+                                contentDescription = "VitaAI",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                         Spacer(Modifier.height(8.dp))
                         Text("VitaAI", fontSize = 22.sp,
                             fontWeight = FontWeight.Bold, color = Gold)

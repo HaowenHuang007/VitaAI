@@ -7,7 +7,7 @@ data class LoginRequest(val username: String, val password: String)
 data class LoginResponse(val access_token: String, val token_type: String)
 data class RegisterRequest(val username: String, val email: String, val password: String)
 
-// ===== 问卷 =====
+
 data class QuestionnaireRequest(
     val age: Int,
     val weight: Double,
@@ -16,7 +16,7 @@ data class QuestionnaireRequest(
     val activity_level: String
 )
 
-// ===== 计划 =====
+
 data class DietPlan(val plan: String)
 data class ExercisePlan(val plan: String)
 
