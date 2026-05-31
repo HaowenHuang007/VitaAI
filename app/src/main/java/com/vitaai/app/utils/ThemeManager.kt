@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 
 object ThemeManager {
-    // 0 = system, 1 = light, 2 = dark
     const val MODE_SYSTEM = 0
     const val MODE_LIGHT = 1
     const val MODE_DARK = 2

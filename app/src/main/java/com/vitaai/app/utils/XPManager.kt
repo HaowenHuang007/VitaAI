@@ -11,28 +11,24 @@ object XPManager {
     data class LevelInfo(
         val level: Int,
         val titleKey: String,
-        val emoji: String,
         val currentXP: Int,
         val xpForNext: Int,
         val progress: Float
-    ) {
-        val title: String get() = LanguageManager.t(titleKey)
-    }
+    )
 
     fun getLevelInfo(xp: Int): LevelInfo {
         return when {
-            xp >= 1000 -> LevelInfo(5, "level_master", "👑", xp, 1000, 1f)
-            xp >= 600 -> LevelInfo(4, "level_expert", "⭐", xp, 1000, (xp - 600) / 400f)
-            xp >= 300 -> LevelInfo(3, "level_athlete", "💪", xp, 600, (xp - 300) / 300f)
-            xp >= 100 -> LevelInfo(2, "level_apprentice", "🌿", xp, 300, (xp - 100) / 200f)
-            else -> LevelInfo(1, "level_beginner", "🌱", xp, 100, xp / 100f)
+            xp >= 1000 -> LevelInfo(5, "level_master", xp, 1000, 1f)
+            xp >= 600 -> LevelInfo(4, "level_expert", xp, 1000, (xp - 600) / 400f)
+            xp >= 300 -> LevelInfo(3, "level_athlete", xp, 600, (xp - 300) / 300f)
+            xp >= 100 -> LevelInfo(2, "level_apprentice", xp, 300, (xp - 100) / 200f)
+            else -> LevelInfo(1, "level_beginner", xp, 100, xp / 100f)
         }
     }
 
     private fun today(): String =
         SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
-    // Añade XP con límite diario por acción
     fun addXPWithLimit(
         amount: Int,
         actionKey: String,
@@ -48,7 +44,7 @@ object XPManager {
         userRef.get().addOnSuccessListener { doc ->
             val currentCount = (doc.getLong(limitKey) ?: 0).toInt()
             if (currentCount >= dailyLimit) {
-                onAdded(0) // Ya alcanzó el límite
+                onAdded(0)
                 return@addOnSuccessListener
             }
             val currentXP = (doc.getLong("xp") ?: 0).toInt()
@@ -65,7 +61,6 @@ object XPManager {
         }
     }
 
-    // Versión simple sin callback
     fun addXP(amount: Int, reason: String = "") {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
@@ -87,7 +82,6 @@ object XPManager {
     const val XP_FOOD_SCAN = 15
     const val XP_MOOD_CHECK = 5
 
-    // Keys para límites diarios
     const val KEY_PLAN = "plan"
     const val KEY_PROGRESS = "progress"
     const val KEY_CHAT = "chat"

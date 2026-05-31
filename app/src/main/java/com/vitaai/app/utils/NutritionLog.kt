@@ -4,6 +4,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
+private const val COLLECTION_USERS = "users"
+private const val COLLECTION_NUTRITION = "nutrition"
+private const val FIELD_CALORIES = "calories"
+private const val FIELD_PROTEIN = "proteinG"
+private const val FIELD_CARBS = "carbsG"
+private const val FIELD_FAT = "fatG"
+private const val FIELD_DATE = "date"
+
 object NutritionLog {
 
     data class DailyTotals(
@@ -21,22 +29,29 @@ object NutritionLog {
         onResult: (DailyTotals) -> Unit = {}
     ) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        val ref = FirebaseFirestore.getInstance().collection("users").document(uid)
-            .collection("nutrition").document(DateUtils.todayKey())
+        val ref = FirebaseFirestore.getInstance().collection(COLLECTION_USERS).document(uid)
+            .collection(COLLECTION_NUTRITION).document(DateUtils.todayKey())
+            
         ref.get().addOnSuccessListener { doc ->
+            val oldCalories = (doc.getLong(FIELD_CALORIES) ?: 0).toInt()
+            val oldProtein = (doc.getLong(FIELD_PROTEIN) ?: 0).toInt()
+            val oldCarbs = (doc.getLong(FIELD_CARBS) ?: 0).toInt()
+            val oldFat = (doc.getLong(FIELD_FAT) ?: 0).toInt()
+
             val totals = DailyTotals(
-                calories = ((doc.getLong("calories") ?: 0) + calories).toInt(),
-                proteinG = ((doc.getLong("proteinG") ?: 0) + proteinG).toInt(),
-                carbsG = ((doc.getLong("carbsG") ?: 0) + carbsG).toInt(),
-                fatG = ((doc.getLong("fatG") ?: 0) + fatG).toInt()
+                calories = oldCalories + calories,
+                proteinG = oldProtein + proteinG,
+                carbsG = oldCarbs + carbsG,
+                fatG = oldFat + fatG
             )
+            
             ref.set(
                 mapOf(
-                    "calories" to totals.calories,
-                    "proteinG" to totals.proteinG,
-                    "carbsG" to totals.carbsG,
-                    "fatG" to totals.fatG,
-                    "date" to DateUtils.todayKey()
+                    FIELD_CALORIES to totals.calories,
+                    FIELD_PROTEIN to totals.proteinG,
+                    FIELD_CARBS to totals.carbsG,
+                    FIELD_FAT to totals.fatG,
+                    FIELD_DATE to DateUtils.todayKey()
                 ),
                 SetOptions.merge()
             ).addOnSuccessListener { onResult(totals) }
@@ -45,18 +60,17 @@ object NutritionLog {
 
     fun loadToday(onResult: (DailyTotals) -> Unit) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        FirebaseFirestore.getInstance().collection("users").document(uid)
-            .collection("nutrition").document(DateUtils.todayKey())
+        FirebaseFirestore.getInstance().collection(COLLECTION_USERS).document(uid)
+            .collection(COLLECTION_NUTRITION).document(DateUtils.todayKey())
             .get()
             .addOnSuccessListener { doc ->
-                onResult(
-                    DailyTotals(
-                        calories = (doc.getLong("calories") ?: 0).toInt(),
-                        proteinG = (doc.getLong("proteinG") ?: 0).toInt(),
-                        carbsG = (doc.getLong("carbsG") ?: 0).toInt(),
-                        fatG = (doc.getLong("fatG") ?: 0).toInt()
-                    )
+                val totals = DailyTotals(
+                    calories = (doc.getLong(FIELD_CALORIES) ?: 0).toInt(),
+                    proteinG = (doc.getLong(FIELD_PROTEIN) ?: 0).toInt(),
+                    carbsG = (doc.getLong(FIELD_CARBS) ?: 0).toInt(),
+                    fatG = (doc.getLong(FIELD_FAT) ?: 0).toInt()
                 )
+                onResult(totals)
             }
     }
 }

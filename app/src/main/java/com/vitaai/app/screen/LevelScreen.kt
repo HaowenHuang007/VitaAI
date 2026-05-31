@@ -10,19 +10,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.ui.theme.DeepBlue
 import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.ui.theme.NavyBlue
-import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.XPManager
+
+private const val USERS_COLLECTION = "users"
+private const val FIELD_XP = "xp"
+private const val FIELD_USERNAME = "username"
+
+private const val UNIT_XP = " XP"
+private const val PLUS_PREFIX = "+"
 
 @Composable
 fun LevelScreen(modifier: Modifier = Modifier) {
@@ -33,24 +40,22 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     var username by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        db.collection("users").document(uid).get()
+        db.collection(USERS_COLLECTION).document(uid).get()
             .addOnSuccessListener { doc ->
-                xp = (doc.getLong("xp") ?: 0).toInt()
-                username = doc.getString("username") ?: ""
+                xp = (doc.getLong(FIELD_XP) ?: 0).toInt()
+                username = doc.getString(FIELD_USERNAME) ?: ""
             }
     }
 
     val levelInfo = XPManager.getLevelInfo(xp)
 
     val levels = listOf(
-        Triple(1, "🌱", "level_beginner"),
-        Triple(2, "🌿", "level_apprentice"),
-        Triple(3, "💪", "level_athlete"),
-        Triple(4, "⭐", "level_expert"),
-        Triple(5, "👑", "level_master")
+        Triple(1, R.string.level_beginner, 0),
+        Triple(2, R.string.level_apprentice, 100),
+        Triple(3, R.string.level_athlete, 300),
+        Triple(4, R.string.level_expert, 600),
+        Triple(5, R.string.level_master, 1000)
     )
-
-    val xpThresholds = listOf(0, 100, 300, 600, 1000)
 
     Column(
         modifier = modifier
@@ -61,7 +66,6 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     ) {
         Spacer(Modifier.height(16.dp))
 
-        // Card nivel actual
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -71,29 +75,48 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(levelInfo.emoji, fontSize = 64.sp)
+                Icon(
+                    imageVector = IconList.getIconForLevel(levelInfo.level),
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = Gold
+                )
                 Spacer(Modifier.height(8.dp))
-                Text(levelInfo.title, fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold, color = Gold)
-                Text("${LanguageManager.t("level")} ${levelInfo.level}", fontSize = 16.sp,
-                    color = Color.White.copy(alpha = 0.7f))
+                Text(
+                    text = stringResource(id = when(levelInfo.level) {
+                        5 -> R.string.level_master
+                        4 -> R.string.level_expert
+                        3 -> R.string.level_athlete
+                        2 -> R.string.level_apprentice
+                        else -> R.string.level_beginner
+                    }),
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Gold
+                )
+                Text(
+                    text = "${stringResource(R.string.level_label)} ${levelInfo.level}",
+                    fontSize = 16.sp,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
                 Spacer(Modifier.height(16.dp))
 
-                // XP total
-                Text("${levelInfo.currentXP} XP", fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    text = "${levelInfo.currentXP}$UNIT_XP",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
 
                 if (levelInfo.level < 5) {
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        LanguageManager.t("xp_to_next").replace(
-                            "{xp}", (levelInfo.xpForNext - levelInfo.currentXP).toString()
-                        ),
-                        fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f)
+                        text = stringResource(R.string.level_xp_to_next, levelInfo.xpForNext - levelInfo.currentXP),
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.6f)
                     )
                     Spacer(Modifier.height(8.dp))
 
-                    // Barra de progreso
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -111,30 +134,35 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     }
                 } else {
                     Spacer(Modifier.height(8.dp))
-                    Text(LanguageManager.t("max_level_reached"),
-                        fontSize = 14.sp, color = Gold,
-                        fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = stringResource(R.string.level_max_reached),
+                        fontSize = 14.sp,
+                        color = Gold,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
 
         Spacer(Modifier.height(24.dp))
 
-        // Cómo ganar XP
-        Text("💡 ${LanguageManager.t("how_to_earn_xp")}", fontSize = 18.sp,
+        Text(
+            text = stringResource(R.string.level_how_to_earn),
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.primary
+        )
         Spacer(Modifier.height(12.dp))
 
         val xpActions = listOf(
-            Triple("📊", LanguageManager.t("xp_action_progress"), "+${XPManager.XP_DAILY_LOG} XP"),
-            Triple("🤖", LanguageManager.t("xp_action_plan"), "+${XPManager.XP_GENERATE_PLAN} XP"),
-            Triple("📸", LanguageManager.t("xp_action_food"), "+${XPManager.XP_FOOD_SCAN} XP"),
-            Triple("💬", LanguageManager.t("xp_action_chat"), "+${XPManager.XP_CHAT_MESSAGE} XP"),
-            Triple("😊", LanguageManager.t("xp_action_mood"), "+${XPManager.XP_MOOD_CHECK} XP")
+            Triple(IconList.Progress, R.string.level_xp_action_progress, XPManager.XP_DAILY_LOG),
+            Triple(IconList.Plan, R.string.level_xp_action_plan, XPManager.XP_GENERATE_PLAN),
+            Triple(IconList.Camera, R.string.level_xp_action_food, XPManager.XP_FOOD_SCAN),
+            Triple(IconList.Chat, R.string.level_xp_action_chat, XPManager.XP_CHAT_MESSAGE),
+            Triple(IconList.Mood, R.string.level_xp_action_mood, XPManager.XP_MOOD_CHECK)
         )
 
-        xpActions.forEach { (emoji, action, xpGain) ->
+        xpActions.forEach { (icon, actionRes, xpGain) ->
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 shape = RoundedCornerShape(12.dp)
@@ -143,28 +171,41 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(emoji, fontSize = 24.sp)
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                     Spacer(Modifier.width(12.dp))
-                    Text(action, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                    Text(xpGain, fontSize = 14.sp,
+                    Text(
+                        text = stringResource(actionRes),
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "$PLUS_PREFIX$xpGain$UNIT_XP",
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Gold)
+                        color = Gold
+                    )
                 }
             }
         }
 
         Spacer(Modifier.height(24.dp))
 
-        // Todos los niveles
-        Text("🏆 ${LanguageManager.t("all_levels")}", fontSize = 18.sp,
+        Text(
+            text = stringResource(R.string.level_all_levels),
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.primary
+        )
         Spacer(Modifier.height(12.dp))
 
-        levels.forEach { (level, emoji, titleKey) ->
+        levels.forEach { (level, titleResId, xpNeeded) ->
             val isUnlocked = levelInfo.level >= level
             val isCurrent = levelInfo.level == level
-            val xpNeeded = xpThresholds[level - 1]
 
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -181,17 +222,22 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(if (isUnlocked) emoji else "🔒", fontSize = 28.sp)
+                    Icon(
+                        imageVector = if (isUnlocked) IconList.getIconForLevel(level) else IconList.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                        tint = if (isCurrent) Gold else if (isUnlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    )
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            LanguageManager.t(titleKey),
+                            text = stringResource(titleResId),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isCurrent) Gold else MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            LanguageManager.t("from_xp").replace("{xp}", xpNeeded.toString()),
+                            text = stringResource(R.string.level_from_xp, xpNeeded),
                             fontSize = 12.sp,
                             color = if (isCurrent) Color.White.copy(alpha = 0.6f)
                             else MaterialTheme.colorScheme.outline
@@ -204,8 +250,12 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                                 .background(Gold)
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
-                            Text(LanguageManager.t("current"), fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold, color = DeepBlue)
+                            Text(
+                                text = stringResource(R.string.level_current_tag),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = DeepBlue
+                            )
                         }
                     }
                 }

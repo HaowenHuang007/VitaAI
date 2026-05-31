@@ -7,7 +7,6 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-// TODO: Move this key to a secure backend — never ship API keys in the APK
 private const val OPENAI_API_KEY = "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"
 private const val OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 private const val TIMEOUT_MS = 30_000
@@ -75,9 +74,11 @@ data class FoodAnalysis(
     val carbsG: Int,
     val fatG: Int,
     val rating: String,
-    val tip: String,
+    val tip: String
+) {
     val displayText: String
-)
+        get() = "$name\n$calories kcal | P: ${proteinG}g C: ${carbsG}g F: ${fatG}g\nRating: $rating\n\n$tip"
+}
 
 suspend fun analyzeImageWithOpenAI(base64Image: String, language: String = "Spanish"): FoodAnalysis =
     withContext(Dispatchers.IO) {
@@ -124,22 +125,14 @@ suspend fun analyzeImageWithOpenAI(base64Image: String, language: String = "Span
         val raw = connection.readResponse().extractContent()
         val cleaned = raw.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
         val json = JSONObject(cleaned)
-        val name = json.optString("name", "?")
-        val calories = json.optInt("calories", 0)
-        val protein = json.optInt("protein", 0)
-        val carbs = json.optInt("carbs", 0)
-        val fat = json.optInt("fat", 0)
-        val rating = json.optString("rating", "moderate")
-        val tip = json.optString("tip", "")
-
-        val display = buildString {
-            append("🍽️ ").append(name).append("\n")
-            append("🔥 ").append(calories).append(" kcal\n")
-            append("💪 ").append(protein).append("g\n")
-            append("🍞 ").append(carbs).append("g\n")
-            append("🥑 ").append(fat).append("g\n")
-            append("✅ ").append(rating).append("\n")
-            if (tip.isNotBlank()) append("💡 ").append(tip)
-        }
-        FoodAnalysis(name, calories, protein, carbs, fat, rating, tip, display)
+        
+        FoodAnalysis(
+            name = json.optString("name", "?"),
+            calories = json.optInt("calories", 0),
+            proteinG = json.optInt("protein", 0),
+            carbsG = json.optInt("carbs", 0),
+            fatG = json.optInt("fat", 0),
+            rating = json.optString("rating", "moderate"),
+            tip = json.optString("tip", "")
+        )
     }

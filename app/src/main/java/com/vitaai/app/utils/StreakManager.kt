@@ -11,19 +11,23 @@ object StreakManager {
     fun recordActivity(onResult: (StreakInfo) -> Unit = {}) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val ref = FirebaseFirestore.getInstance().collection("users").document(uid)
+        
         ref.get().addOnSuccessListener { doc ->
             val today = DateUtils.todayKey()
             val lastDate = doc.getString("streakLastDate") ?: ""
             val current = (doc.getLong("streakCurrent") ?: 0).toInt()
             val longest = (doc.getLong("streakLongest") ?: 0).toInt()
 
-            val newCurrent = when {
-                lastDate == today -> current
-                DateUtils.isYesterday(lastDate) -> current + 1
-                lastDate.isEmpty() -> 1
-                else -> 1
+            var newCurrent = 1
+            if (lastDate.isNotEmpty()) {
+                if (lastDate == today) {
+                    newCurrent = current
+                } else if (DateUtils.isYesterday(lastDate)) {
+                    newCurrent = current + 1
+                }
             }
-            val newLongest = maxOf(longest, newCurrent)
+            
+            val newLongest = if (newCurrent > longest) newCurrent else longest
 
             ref.set(
                 mapOf(
@@ -46,13 +50,14 @@ object StreakManager {
                 val current = (doc.getLong("streakCurrent") ?: 0).toInt()
                 val longest = (doc.getLong("streakLongest") ?: 0).toInt()
                 val last = doc.getString("streakLastDate") ?: ""
-                // si el último día no es hoy ni ayer, racha rota
-                val effectiveCurrent = when {
-                    last.isEmpty() -> 0
-                    DateUtils.isToday(last) -> current
-                    DateUtils.isYesterday(last) -> current
-                    else -> 0
+                
+                var effectiveCurrent = 0
+                if (last.isNotEmpty()) {
+                    if (DateUtils.isToday(last) || DateUtils.isYesterday(last)) {
+                        effectiveCurrent = current
+                    }
                 }
+
                 onResult(StreakInfo(effectiveCurrent, longest, last))
             }
     }

@@ -8,16 +8,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.utils.DateUtils
-import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.callOpenAI
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.Locale
 
 @Composable
 fun WeeklyReportScreen(modifier: Modifier = Modifier) {
@@ -30,10 +34,8 @@ fun WeeklyReportScreen(modifier: Modifier = Modifier) {
     var summary by remember { mutableStateOf("") }
     var hasData by remember { mutableStateOf(false) }
 
-    val langName = when (LanguageManager.currentLanguage.value) {
-        "en" -> "English"; "zh" -> "Chinese"; "fr" -> "French"; "pt" -> "Portuguese"
-        else -> "Spanish"
-    }
+    val locale = Locale.getDefault()
+    val langName = locale.displayLanguage
 
     suspend fun generate() {
         val sevenDaysAgo = DateUtils.dateKey(-6)
@@ -74,7 +76,7 @@ fun WeeklyReportScreen(modifier: Modifier = Modifier) {
             progressData.isNotBlank() || exerciseData.isNotBlank()
 
         if (!hasData) {
-            report = LanguageManager.t("no_week_data")
+            report = "" // Handled in UI
             return
         }
 
@@ -83,7 +85,7 @@ fun WeeklyReportScreen(modifier: Modifier = Modifier) {
             Respond in $langName. Return STRICT JSON:
             {
               "summary": "1-sentence headline of how the week went",
-              "report": "detailed analysis with: nutrition trends, mood patterns, weight progress, exercise consistency, top 3 wins, top 2 things to improve, and a specific action plan for next week. Use emojis and short paragraphs."
+              "report": "detailed analysis with: nutrition trends, mood patterns, weight progress, exercise consistency, top 3 wins, top 2 things to improve, and a specific action plan for next week. Use short paragraphs."
             }
 
             NUTRITION: $nutritionData
@@ -106,7 +108,7 @@ fun WeeklyReportScreen(modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) {
         isLoading = true
         try { generate() } catch (e: Exception) {
-            report = LanguageManager.t("chat_error") + ": ${e.message}"
+            report = "Error: ${e.message}"
         }
         isLoading = false
     }
@@ -115,10 +117,25 @@ fun WeeklyReportScreen(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)
     ) {
         Spacer(Modifier.height(8.dp))
-        Text("📊 ${LanguageManager.t("weekly_report")}", fontSize = 24.sp,
-            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Text("${DateUtils.dateKey(-6)} → ${DateUtils.todayKey()}",
-            fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = IconList.WeeklyReport,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.report_title),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        Text(
+            text = "${DateUtils.dateKey(-6)} → ${DateUtils.todayKey()}",
+            fontSize = 12.sp, color = MaterialTheme.colorScheme.outline
+        )
         Spacer(Modifier.height(16.dp))
 
         if (isLoading) {
@@ -127,9 +144,20 @@ fun WeeklyReportScreen(modifier: Modifier = Modifier) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(12.dp))
-                    Text(LanguageManager.t("analyzing_week"),
-                        color = MaterialTheme.colorScheme.outline)
+                    Text(
+                        text = stringResource(R.string.report_analyzing),
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
+            }
+        } else if (!hasData && report.isEmpty()) {
+            Box(Modifier.fillMaxWidth().padding(top = 64.dp),
+                contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.report_no_data),
+                    color = MaterialTheme.colorScheme.outline,
+                    textAlign = TextAlign.Center
+                )
             }
         } else {
             if (summary.isNotEmpty()) {
@@ -145,12 +173,14 @@ fun WeeklyReportScreen(modifier: Modifier = Modifier) {
                 }
                 Spacer(Modifier.height(12.dp))
             }
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(report, modifier = Modifier.padding(16.dp),
-                    fontSize = 14.sp, lineHeight = 22.sp)
+            if (report.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(report, modifier = Modifier.padding(16.dp),
+                        fontSize = 14.sp, lineHeight = 22.sp)
+                }
             }
             Spacer(Modifier.height(16.dp))
             OutlinedButton(
@@ -158,14 +188,18 @@ fun WeeklyReportScreen(modifier: Modifier = Modifier) {
                     isLoading = true; summary = ""; report = ""
                     scope.launch {
                         try { generate() } catch (e: Exception) {
-                            report = LanguageManager.t("chat_error") + ": ${e.message}"
+                            report = "Error: ${e.message}"
                         }
                         isLoading = false
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp)
-            ) { Text(LanguageManager.t("regenerate"), fontSize = 14.sp) }
+            ) {
+                Icon(IconList.Update, null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.common_regenerate), fontSize = 14.sp)
+            }
         }
         Spacer(Modifier.height(32.dp))
     }

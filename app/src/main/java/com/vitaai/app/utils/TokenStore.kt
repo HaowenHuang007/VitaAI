@@ -7,16 +7,17 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 
 val Context.dataStore by preferencesDataStore(name = "vitaai_prefs")
+private val TOKEN_KEY = stringPreferencesKey("jwt_token")
 
 object TokenStore {
-    private val TOKEN_KEY = stringPreferencesKey("jwt_token")
 
     suspend fun saveToken(context: Context, token: String) {
         context.dataStore.edit { it[TOKEN_KEY] = token }
     }
 
     suspend fun getToken(context: Context): String? {
-        return context.dataStore.data.first()[TOKEN_KEY]
+        val prefs = context.dataStore.data.first()
+        return prefs[TOKEN_KEY]
     }
 
     suspend fun clearToken(context: Context) {

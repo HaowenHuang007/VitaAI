@@ -3,99 +3,132 @@ package com.vitaai.app.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.vitaai.app.R
+import com.vitaai.app.icons.IconList
 import com.vitaai.app.utils.AchievementManager
 import com.vitaai.app.utils.DateUtils
-import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.StreakManager
 import com.vitaai.app.utils.XPManager
+import java.text.SimpleDateFormat
+import java.util.*
 
-private data class ExerciseType(val key: String, val emoji: String, val metPerMin: Double)
+private const val USERS_COLLECTION = "users"
+private const val EXERCISES_COLLECTION = "exercises"
+private const val FIELD_WEIGHT = "weight"
+private const val FIELD_TIMESTAMP = "timestamp"
+private const val FIELD_TYPE_KEY = "typeKey"
+private const val FIELD_DURATION = "durationMin"
+private const val FIELD_CALORIES = "caloriesBurned"
+private const val FIELD_DATE = "date"
+private const val FIELD_TIME = "time"
+
+private const val ACTION_EXERCISE = "exercise"
+private const val ACHIEVEMENT_FIRST_EXERCISE = "first_exercise"
+
+private data class ExerciseType(val key: String, val metPerMin: Double)
+
+private const val HOUR = 60
 
 private val EXERCISE_TYPES = listOf(
-    ExerciseType("walking", "🚶", 3.5 / 60),
-    ExerciseType("running", "🏃", 9.8 / 60),
-    ExerciseType("cycling", "🚴", 7.5 / 60),
-    ExerciseType("swimming", "🏊", 8.0 / 60),
-    ExerciseType("yoga", "🧘", 2.5 / 60),
-    ExerciseType("gym", "🏋️", 6.0 / 60),
-    ExerciseType("dance", "💃", 5.0 / 60),
-    ExerciseType("hiit", "🔥", 10.0 / 60)
+    ExerciseType("walking", 3.5 / HOUR),
+    ExerciseType("running", 9.8 / HOUR),
+    ExerciseType("cycling", 7.5 / HOUR),
+    ExerciseType("swimming", 8.0 / HOUR),
+    ExerciseType("yoga", 2.5 / HOUR),
+    ExerciseType("gym", 6.0 / HOUR),
+    ExerciseType("dance", 5.0 / HOUR),
+    ExerciseType("hiit", 10.0 / HOUR)
 )
 
 data class ExerciseEntry(
     val id: String,
     val type: String,
-    val emoji: String,
     val durationMin: Int,
     val caloriesBurned: Int,
-    val date: String
+    val date: String,
+    val time: String
 )
 
 @Composable
 fun ExerciseScreen(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
     var selected by remember { mutableStateOf<ExerciseType?>(null) }
     var duration by remember { mutableStateOf("") }
+    var exerciseTime by remember { 
+        mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())) 
+    }
     var weight by remember { mutableStateOf(70.0) }
     var savedMsg by remember { mutableStateOf("") }
     var entries by remember { mutableStateOf<List<ExerciseEntry>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        db.collection("users").document(uid).get().addOnSuccessListener {
-            weight = it.getDouble("weight") ?: 70.0
+        db.collection(USERS_COLLECTION).document(uid).get().addOnSuccessListener {
+            weight = it.getDouble(FIELD_WEIGHT) ?: 70.0
         }
-        db.collection("users").document(uid).collection("exercises")
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .limit(20)
+        db.collection(USERS_COLLECTION).document(uid).collection(EXERCISES_COLLECTION)
+            .orderBy(FIELD_TIMESTAMP, Query.Direction.DESCENDING)
             .addSnapshotListener { snap, _ ->
                 entries = snap?.documents?.map { d ->
                     ExerciseEntry(
                         id = d.id,
-                        type = d.getString("typeKey") ?: "",
-                        emoji = d.getString("emoji") ?: "",
-                        durationMin = (d.getLong("durationMin") ?: 0).toInt(),
-                        caloriesBurned = (d.getLong("caloriesBurned") ?: 0).toInt(),
-                        date = d.getString("date") ?: ""
+                        type = d.getString(FIELD_TYPE_KEY) ?: "",
+                        durationMin = (d.getLong(FIELD_DURATION) ?: 0).toInt(),
+                        caloriesBurned = (d.getLong(FIELD_CALORIES) ?: 0).toInt(),
+                        date = d.getString(FIELD_DATE) ?: "",
+                        time = d.getString(FIELD_TIME) ?: ""
                     )
                 } ?: emptyList()
             }
     }
 
-    val parsedDuration = duration.toIntOrNull()
-    val estimatedCals = if (selected != null && parsedDuration != null)
+    val parsedDuration = duration.toIntOrNull() ?: 0
+
+    val estimatedCals = if (selected != null && parsedDuration > 0)
         (selected!!.metPerMin * parsedDuration * weight).toInt() else 0
 
     Column(
-        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp)
     ) {
         Spacer(Modifier.height(8.dp))
-        Text("🏋️ ${LanguageManager.t("exercise_log")}",
+        Text(
+            text = stringResource(R.string.exercise_log_title),
             fontSize = 24.sp, fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.primary
+        )
         Spacer(Modifier.height(16.dp))
 
-        Text(LanguageManager.t("choose_exercise"), fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold)
+        Text(
+            text = stringResource(R.string.exercise_choose),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold
+        )
         Spacer(Modifier.height(8.dp))
         EXERCISE_TYPES.chunked(4).forEach { row ->
             Row(modifier = Modifier.fillMaxWidth(),
@@ -114,9 +147,28 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
                             .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(type.emoji, fontSize = 28.sp)
-                        Text(LanguageManager.t("ex_" + type.key), fontSize = 10.sp,
-                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal)
+                        Icon(
+                            imageVector = IconList.getIconForExercise(type.key),
+                            contentDescription = null,
+                            tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Text(
+                            text = stringResource(id = when(type.key) {
+                                "walking" -> R.string.ex_walking
+                                "running" -> R.string.ex_running
+                                "cycling" -> R.string.ex_cycling
+                                "swimming" -> R.string.ex_swimming
+                                "yoga" -> R.string.ex_yoga
+                                "gym" -> R.string.ex_gym
+                                "dance" -> R.string.ex_dance
+                                "hiit" -> R.string.ex_hiit
+                                else -> R.string.exercise_log_title
+                            }),
+                            fontSize = 10.sp,
+                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
@@ -125,20 +177,54 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(16.dp))
 
-        OutlinedTextField(
-            value = duration,
-            onValueChange = { new -> if (new.all { it.isDigit() } && new.length <= 3) duration = new },
-            label = { Text(LanguageManager.t("duration_min")) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp), singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = duration,
+                onValueChange = { new -> 
+                    if (new.all { it.isDigit() } && new.length <= 3) duration = new 
+                },
+                label = { Text(stringResource(R.string.exercise_duration_min)) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp), singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            OutlinedTextField(
+                value = exerciseTime,
+                onValueChange = { new ->
+                    val clean = new.replace(":", "").filter { it.isDigit() }
+                    if (clean.length <= 4) {
+                        val isValid = when (clean.length) {
+                            1 -> true
+                            2 -> clean.toInt() in 0..23
+                            3 -> clean.substring(0, 2).toInt() in 0..23 && clean[2].digitToInt() in 0..5
+                            4 -> clean.substring(0, 2).toInt() in 0..23 && clean.substring(2).toInt() in 0..59
+                            else -> true
+                        }
+                        if (isValid) {
+                            exerciseTime = when {
+                                clean.length >= 3 -> "${clean.substring(0, 2)}:${clean.substring(2)}"
+                                else -> clean
+                            }
+                        }
+                    }
+                },
+                label = { Text(stringResource(R.string.exercise_time_label)) },
+                placeholder = { Text("00:00") },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp), singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+        }
 
         if (estimatedCals > 0) {
             Spacer(Modifier.height(8.dp))
-            Text("≈ $estimatedCals kcal", fontSize = 14.sp,
+            Text(
+                text = stringResource(R.string.exercise_approx_format, estimatedCals),
+                fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold)
+                fontWeight = FontWeight.SemiBold
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -146,30 +232,33 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
         Button(
             onClick = {
                 val t = selected ?: return@Button
-                val d = parsedDuration ?: return@Button
-                db.collection("users").document(uid).collection("exercises")
+                val d = parsedDuration
+                if (d <= 0) return@Button
+                db.collection(USERS_COLLECTION).document(uid).collection(EXERCISES_COLLECTION)
                     .add(mapOf(
-                        "typeKey" to t.key,
-                        "emoji" to t.emoji,
-                        "durationMin" to d,
-                        "caloriesBurned" to estimatedCals,
-                        "date" to DateUtils.todayKey(),
-                        "timestamp" to System.currentTimeMillis()
+                        FIELD_TYPE_KEY to t.key,
+                        FIELD_DURATION to d,
+                        FIELD_CALORIES to estimatedCals,
+                        FIELD_DATE to DateUtils.todayKey(),
+                        FIELD_TIME to exerciseTime,
+                        FIELD_TIMESTAMP to System.currentTimeMillis()
                     )).addOnSuccessListener {
-                        savedMsg = "✅ ${LanguageManager.t("saved")} · $estimatedCals kcal"
+                        savedMsg = context.getString(R.string.exercise_saved_format, estimatedCals)
                         duration = ""
                         selected = null
                         StreakManager.recordActivity()
-                        AchievementManager.unlock("first_exercise")
+                        AchievementManager.unlock(ACHIEVEMENT_FIRST_EXERCISE)
                         XPManager.addXPWithLimit(
-                            amount = 10, actionKey = "exercise", dailyLimit = 3
+                            amount = 10, actionKey = ACTION_EXERCISE, dailyLimit = 3
                         )
                     }
             },
             modifier = Modifier.fillMaxWidth().height(52.dp),
             shape = RoundedCornerShape(12.dp),
-            enabled = selected != null && (parsedDuration ?: 0) in 1..600
-        ) { Text(LanguageManager.t("save"), fontSize = 16.sp) }
+            enabled = selected != null && parsedDuration in 1..600
+        ) { 
+            Text(stringResource(R.string.common_save), fontSize = 16.sp) 
+        }
 
         if (savedMsg.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
@@ -177,8 +266,11 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
         }
 
         Spacer(Modifier.height(24.dp))
-        Text(LanguageManager.t("recent_history"), fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold)
+        Text(
+            text = stringResource(R.string.exercise_recent_history),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold
+        )
         Spacer(Modifier.height(8.dp))
 
         entries.forEach { e ->
@@ -190,17 +282,51 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(e.emoji, fontSize = 24.sp)
+                    Icon(
+                        imageVector = IconList.getIconForExercise(e.type),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
                     Spacer(Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(LanguageManager.t("ex_${e.type}"),
-                            fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                        Text("${e.durationMin} min · ${e.date}",
-                            fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
+                        Text(
+                            text = stringResource(id = when(e.type) {
+                                "walking" -> R.string.ex_walking
+                                "running" -> R.string.ex_running
+                                "cycling" -> R.string.ex_cycling
+                                "swimming" -> R.string.ex_swimming
+                                "yoga" -> R.string.ex_yoga
+                                "gym" -> R.string.ex_gym
+                                "dance" -> R.string.ex_dance
+                                "hiit" -> R.string.ex_hiit
+                                else -> R.string.exercise_log_title
+                            }),
+                            fontSize = 14.sp, fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = stringResource(R.string.exercise_history_item_format, e.durationMin, "${e.date} ${e.time}"),
+                            fontSize = 11.sp, color = MaterialTheme.colorScheme.outline
+                        )
                     }
-                    Text("${e.caloriesBurned} kcal", fontSize = 13.sp,
+                    Text(
+                        text = "${e.caloriesBurned} ${stringResource(R.string.common_kcal_unit)}",
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary)
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    IconButton(
+                        onClick = {
+                            db.collection(USERS_COLLECTION).document(uid)
+                                .collection(EXERCISES_COLLECTION).document(e.id).delete()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.common_delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }
