@@ -164,6 +164,8 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
                         XPManager.addXPWithLimit(
                             amount = 10, actionKey = "exercise", dailyLimit = 3
                         )
+                    }.addOnFailureListener {
+                        savedMsg = "⚠️ ${LanguageManager.t("error_saving")}"
                     }
             },
             modifier = Modifier.fillMaxWidth().height(52.dp),

@@ -40,6 +40,7 @@ object NutritionLog {
                 ),
                 SetOptions.merge()
             ).addOnSuccessListener { onResult(totals) }
+                .addOnFailureListener { onResult(totals) }
         }
     }
 

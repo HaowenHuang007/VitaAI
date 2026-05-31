@@ -103,6 +103,9 @@ fun PlanScreen(
                             "age" to age, "weight" to weight,
                             "height" to height, "goal" to goal, "imc" to imc
                         ))
+                        .addOnFailureListener {
+                            errorMsg = "⚠️ ${LanguageManager.t("error_saving")}"
+                        }
                     XPManager.addXPWithLimit(
                         amount = XPManager.XP_GENERATE_PLAN,
                         actionKey = XPManager.KEY_PLAN,

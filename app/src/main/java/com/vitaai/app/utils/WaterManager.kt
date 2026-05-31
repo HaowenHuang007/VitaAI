@@ -2,6 +2,7 @@ package com.vitaai.app.utils
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 
 object WaterManager {
@@ -17,6 +18,7 @@ object WaterManager {
                 mapOf("ml" to newTotal, "date" to DateUtils.todayKey()),
                 SetOptions.merge()
             ).addOnSuccessListener { onResult(newTotal) }
+             .addOnFailureListener { onResult(-1) }
         }
     }
 
@@ -36,5 +38,21 @@ object WaterManager {
             .addOnSuccessListener { doc ->
                 onResult((doc.getLong("ml") ?: 0).toInt())
             }
+    }
+
+    fun loadHistory(limit: Int = 7, onResult: (List<Pair<String, Int>>) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        FirebaseFirestore.getInstance().collection("users").document(uid)
+            .collection("water")
+            .orderBy("date", Query.Direction.DESCENDING)
+            .limit(limit.toLong())
+            .get()
+            .addOnSuccessListener { snap ->
+                onResult(snap.documents.mapNotNull { doc ->
+                    val date = doc.getString("date") ?: return@mapNotNull null
+                    date to (doc.getLong("ml") ?: 0).toInt()
+                })
+            }
+            .addOnFailureListener { onResult(emptyList()) }
     }
 }

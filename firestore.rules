@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Each authenticated user can read/write only their own document
+    // tree: users/{uid} and every subcollection beneath it
+    // (water, foodlog, nutrition, moods, exercises, goals, ...).
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+  }
+}

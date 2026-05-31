@@ -21,9 +21,9 @@ import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.utils.DateUtils
 import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.XPManager
-import java.text.SimpleDateFormat
 import java.util.*
 
 data class ProgressEntry(
@@ -91,7 +91,7 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = {
-                        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                        val today = DateUtils.todayKey()
                         isSaving = true
                         db.collection("users").document(uid)
                             .collection("progress").document(today)
@@ -115,6 +115,10 @@ fun ProgressScreen(modifier: Modifier = Modifier) {
                                 }
                                 weightInput = ""
                                 caloriesInput = ""
+                            }
+                            .addOnFailureListener {
+                                isSaving = false
+                                savedMsg = "⚠️ ${LanguageManager.t("error_saving")}"
                             }
                     },
                     modifier = Modifier.fillMaxWidth(),

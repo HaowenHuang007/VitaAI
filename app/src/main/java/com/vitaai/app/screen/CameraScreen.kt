@@ -34,6 +34,7 @@ import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vitaai.app.utils.AchievementManager
+import com.vitaai.app.utils.DateUtils
 import com.vitaai.app.utils.FoodAnalysis
 import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.NutritionLog
@@ -42,7 +43,6 @@ import com.vitaai.app.utils.XPManager
 import com.vitaai.app.utils.analyzeImageWithOpenAI
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -245,7 +245,7 @@ fun CameraScreen(modifier: Modifier = Modifier) {
 
                 Button(
                     onClick = {
-                        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                        val today = DateUtils.todayKey()
                         val a = analysis
                         db.collection("users").document(uid)
                             .collection("foodlog")
@@ -276,6 +276,9 @@ fun CameraScreen(modifier: Modifier = Modifier) {
                                     else
                                         "✅ ${LanguageManager.t("saved")} (${LanguageManager.t("xp_daily_limit_food")})"
                                 }
+                            }
+                            .addOnFailureListener { e ->
+                                savedMsg = "❌ ${LanguageManager.t("error_saving")}${e.message}"
                             }
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),

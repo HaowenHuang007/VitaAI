@@ -175,6 +175,9 @@ fun GoalsScreen(modifier: Modifier = Modifier) {
                                 existingTargetWeight = parsedTargetWeight
                                 existingTargetDate = targetDate
                             }
+                            .addOnFailureListener {
+                                savedMsg = "⚠️ ${LanguageManager.t("error_saving")}"
+                            }
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp),

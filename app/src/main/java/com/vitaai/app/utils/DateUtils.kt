@@ -17,10 +17,14 @@ object DateUtils {
     }
 
     fun daysBetween(date1: String, date2: String): Long {
-        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        val d1 = fmt.parse(date1) ?: return 0
-        val d2 = fmt.parse(date2) ?: return 0
-        return TimeUnit.MILLISECONDS.toDays(d2.time - d1.time)
+        return try {
+            val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val d1 = fmt.parse(date1) ?: return 0
+            val d2 = fmt.parse(date2) ?: return 0
+            TimeUnit.MILLISECONDS.toDays(d2.time - d1.time)
+        } catch (e: Exception) {
+            0L
+        }
     }
 
     fun isYesterday(date: String): Boolean = daysBetween(date, todayKey()) == 1L

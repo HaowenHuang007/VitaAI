@@ -1,5 +1,8 @@
 package com.vitaai.app.screen
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -7,6 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -61,6 +66,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val currentLang by LanguageManager.currentLanguage
+    var moreExpanded by remember { mutableStateOf(false) }
 
     var todayMood by remember { mutableStateOf("") }
     var todayMoodEmoji by remember { mutableStateOf("") }
@@ -167,6 +173,12 @@ fun HomeScreen(
                 }
 
                 HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
                 Spacer(Modifier.height(8.dp))
 
                 DrawerItem("🤖", LanguageManager.t("my_plan")) {
@@ -175,38 +187,46 @@ fun HomeScreen(
                 DrawerItem("🎯", LanguageManager.t("my_goals")) {
                     scope.launch { drawerState.close() }; onGoGoals()
                 }
-                DrawerItem("📊", LanguageManager.t("my_progress")) {
-                    scope.launch { drawerState.close() }; onGoProgress()
-                }
                 DrawerItem("📈", LanguageManager.t("weekly_report")) {
                     scope.launch { drawerState.close() }; onGoWeeklyReport()
-                }
-                DrawerItem("💬", LanguageManager.t("nutritionist_ia")) {
-                    scope.launch { drawerState.close() }; onGoChat()
-                }
-                DrawerItem("📸", LanguageManager.t("identify_food")) {
-                    scope.launch { drawerState.close() }; onGoCamera()
-                }
-                DrawerItem("🍽️", LanguageManager.t("food_history")) {
-                    scope.launch { drawerState.close() }; onGoFoodHistory()
                 }
                 DrawerItem("💧", LanguageManager.t("water_tracker")) {
                     scope.launch { drawerState.close() }; onGoWater()
                 }
-                DrawerItem("🏋️", LanguageManager.t("exercise_log")) {
-                    scope.launch { drawerState.close() }; onGoExercise()
-                }
-                DrawerItem("🏆", LanguageManager.t("achievements")) {
-                    scope.launch { drawerState.close() }; onGoAchievements()
-                }
                 DrawerItem("⭐", LanguageManager.t("my_level")) {
                     scope.launch { drawerState.close() }; onGoLevel()
                 }
+
+                ExpandableDrawerItem("📂", LanguageManager.t("more"), moreExpanded) {
+                    moreExpanded = !moreExpanded
+                }
+                if (moreExpanded) {
+                    DrawerItem("📊", LanguageManager.t("my_progress"), indent = true) {
+                        scope.launch { drawerState.close() }; onGoProgress()
+                    }
+                    DrawerItem("💬", LanguageManager.t("nutritionist_ia"), indent = true) {
+                        scope.launch { drawerState.close() }; onGoChat()
+                    }
+                    DrawerItem("📸", LanguageManager.t("identify_food"), indent = true) {
+                        scope.launch { drawerState.close() }; onGoCamera()
+                    }
+                    DrawerItem("🍽️", LanguageManager.t("food_history"), indent = true) {
+                        scope.launch { drawerState.close() }; onGoFoodHistory()
+                    }
+                    DrawerItem("🏋️", LanguageManager.t("exercise_log"), indent = true) {
+                        scope.launch { drawerState.close() }; onGoExercise()
+                    }
+                    DrawerItem("🏆", LanguageManager.t("achievements"), indent = true) {
+                        scope.launch { drawerState.close() }; onGoAchievements()
+                    }
+                }
+
                 DrawerItem("⚙️", LanguageManager.t("settings")) {
                     scope.launch { drawerState.close() }; onGoSettings()
                 }
+                Spacer(Modifier.height(8.dp))
+                }
 
-                Spacer(Modifier.weight(1f))
                 HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
                 NavigationDrawerItem(
                     label = { Text(LanguageManager.t("logout"),
@@ -303,9 +323,14 @@ fun HomeScreen(
                                     .clip(RoundedCornerShape(3.dp))
                                     .background(Color.White.copy(alpha = 0.2f))
                             ) {
+                                val lvlProgress by animateFloatAsState(
+                                    targetValue = levelInfo.progress.coerceIn(0f, 1f),
+                                    animationSpec = tween(durationMillis = 900),
+                                    label = "levelProgress"
+                                )
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxWidth(levelInfo.progress.coerceIn(0f, 1f))
+                                        .fillMaxWidth(lvlProgress)
                                         .fillMaxHeight()
                                         .clip(RoundedCornerShape(3.dp))
                                         .background(Gold)
@@ -376,8 +401,13 @@ fun HomeScreen(
                                         .clip(RoundedCornerShape(3.dp))
                                         .background(Color.White.copy(alpha = 0.2f))
                                 ) {
-                                    val wProgress = (waterMl.toFloat() / targets!!.waterMl)
+                                    val wTarget = (waterMl.toFloat() / targets!!.waterMl)
                                         .coerceIn(0f, 1f)
+                                    val wProgress by animateFloatAsState(
+                                        targetValue = wTarget,
+                                        animationSpec = tween(durationMillis = 900),
+                                        label = "waterProgress"
+                                    )
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth(wProgress).fillMaxHeight()
@@ -524,7 +554,17 @@ fun HomeScreen(
 
 @Composable
 private fun NutrientRing(emoji: String, current: Int, target: Int, color: Color) {
-    val progress = (current.toFloat() / target.coerceAtLeast(1)).coerceIn(0f, 1f)
+    val targetProgress = (current.toFloat() / target.coerceAtLeast(1)).coerceIn(0f, 1f)
+    val progress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = tween(durationMillis = 900),
+        label = "ringProgress"
+    )
+    val animatedCurrent by animateIntAsState(
+        targetValue = current,
+        animationSpec = tween(durationMillis = 900),
+        label = "ringValue"
+    )
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier.size(64.dp),
@@ -554,13 +594,36 @@ private fun NutrientRing(emoji: String, current: Int, target: Int, color: Color)
             Text(emoji, fontSize = 22.sp)
         }
         Spacer(Modifier.height(4.dp))
-        Text("$current", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Text("$animatedCurrent", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
         Text("/ $target", fontSize = 10.sp, color = Color.White.copy(alpha = 0.5f))
     }
 }
 
 @Composable
-fun DrawerItem(emoji: String, title: String, onClick: () -> Unit) {
+fun DrawerItem(emoji: String, title: String, indent: Boolean = false, onClick: () -> Unit) {
+    NavigationDrawerItem(
+        label = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(emoji, fontSize = if (indent) 17.sp else 20.sp)
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    title,
+                    color = if (indent) Color.White.copy(alpha = 0.8f) else Color.White,
+                    fontSize = if (indent) 14.sp else 15.sp
+                )
+            }
+        },
+        selected = false,
+        onClick = onClick,
+        colors = NavigationDrawerItemDefaults.colors(
+            unselectedContainerColor = Color.Transparent
+        ),
+        modifier = Modifier.padding(start = if (indent) 24.dp else 8.dp, end = 8.dp)
+    )
+}
+
+@Composable
+fun ExpandableDrawerItem(emoji: String, title: String, expanded: Boolean, onClick: () -> Unit) {
     NavigationDrawerItem(
         label = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -571,6 +634,13 @@ fun DrawerItem(emoji: String, title: String, onClick: () -> Unit) {
         },
         selected = false,
         onClick = onClick,
+        badge = {
+            Icon(
+                imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.6f)
+            )
+        },
         colors = NavigationDrawerItemDefaults.colors(
             unselectedContainerColor = Color.Transparent
         ),

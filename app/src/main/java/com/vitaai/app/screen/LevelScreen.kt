@@ -1,5 +1,8 @@
 package com.vitaai.app.screen
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -41,6 +44,16 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     }
 
     val levelInfo = XPManager.getLevelInfo(xp)
+    val animatedXp by animateIntAsState(
+        targetValue = levelInfo.currentXP,
+        animationSpec = tween(durationMillis = 900),
+        label = "levelXp"
+    )
+    val animatedProgress by animateFloatAsState(
+        targetValue = levelInfo.progress.coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 900),
+        label = "levelProgress"
+    )
 
     val levels = listOf(
         Triple(1, "🌱", "level_beginner"),
@@ -80,7 +93,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(16.dp))
 
                 // XP total
-                Text("${levelInfo.currentXP} XP", fontSize = 36.sp,
+                Text("${animatedXp} XP", fontSize = 36.sp,
                     fontWeight = FontWeight.Bold, color = Color.White)
 
                 if (levelInfo.level < 5) {
@@ -103,7 +116,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(levelInfo.progress.coerceIn(0f, 1f))
+                                .fillMaxWidth(animatedProgress)
                                 .fillMaxHeight()
                                 .clip(RoundedCornerShape(5.dp))
                                 .background(Gold)

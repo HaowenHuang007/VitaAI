@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.vitaai.app.utils.DateUtils
 import com.vitaai.app.utils.LanguageManager
 import com.vitaai.app.utils.callOpenAIWithHistory
 import kotlinx.coroutines.launch
@@ -178,8 +179,7 @@ fun MoodScreen(modifier: Modifier = Modifier, onDone: () -> Unit = {}) {
                                 """.trimIndent()
                                 recommendation = callOpenAIWithHistory(prompt, emptyList())
 
-                                val today = java.text.SimpleDateFormat("yyyy-MM-dd",
-                                    java.util.Locale.getDefault()).format(java.util.Date())
+                                val today = DateUtils.todayKey()
                                 db.collection("users").document(uid)
                                     .collection("moods").document(today)
                                     .set(mapOf(

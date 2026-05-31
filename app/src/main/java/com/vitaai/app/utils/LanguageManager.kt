@@ -53,6 +53,7 @@ object LanguageManager {
             "nutritionist_ia" to "Nutricionista IA",
             "identify_food" to "Identificar alimento",
             "my_level" to "Mi nivel y XP",
+            "more" to "Más",
             "settings" to "Configuración",
             "logout" to "Cerrar sesión",
             "generate_plan" to "Generar mi plan con IA 🤖",
@@ -226,7 +227,13 @@ object LanguageManager {
             "ach_level5_t" to "Maestro",
             "ach_level5_d" to "Alcanza el nivel máximo",
             "ach_goal_t" to "Meta alcanzada",
-            "ach_goal_d" to "Llega a tu peso objetivo"
+            "ach_goal_d" to "Llega a tu peso objetivo",
+            "today" to "Hoy",
+            "yesterday" to "Ayer",
+            "add_food" to "Añadir comida",
+            "food_name" to "Nombre del alimento",
+            "cancel" to "Cancelar",
+            "error_saving" to "Error al guardar: "
         ),
         "en" to mapOf(
             "app_name" to "VitaAI",
@@ -248,6 +255,7 @@ object LanguageManager {
             "nutritionist_ia" to "AI Nutritionist",
             "identify_food" to "Identify food",
             "my_level" to "My level & XP",
+            "more" to "More",
             "settings" to "Settings",
             "logout" to "Sign out",
             "generate_plan" to "Generate my AI plan 🤖",
@@ -421,7 +429,13 @@ object LanguageManager {
             "ach_level5_t" to "Master",
             "ach_level5_d" to "Reach the max level",
             "ach_goal_t" to "Goal reached",
-            "ach_goal_d" to "Hit your target weight"
+            "ach_goal_d" to "Hit your target weight",
+            "today" to "Today",
+            "yesterday" to "Yesterday",
+            "add_food" to "Add food",
+            "food_name" to "Food name",
+            "cancel" to "Cancel",
+            "error_saving" to "Save error: "
         ),
         "zh" to mapOf(
             "app_name" to "VitaAI",
@@ -443,6 +457,7 @@ object LanguageManager {
             "nutritionist_ia" to "AI营养师",
             "identify_food" to "识别食物",
             "my_level" to "我的等级和经验",
+            "more" to "更多",
             "settings" to "设置",
             "logout" to "退出登录",
             "generate_plan" to "用AI生成我的计划 🤖",
@@ -616,7 +631,13 @@ object LanguageManager {
             "ach_level5_t" to "大师",
             "ach_level5_d" to "达到最高等级",
             "ach_goal_t" to "目标达成",
-            "ach_goal_d" to "达到目标体重"
+            "ach_goal_d" to "达到目标体重",
+            "today" to "今天",
+            "yesterday" to "昨天",
+            "add_food" to "添加食物",
+            "food_name" to "食物名称",
+            "cancel" to "取消",
+            "error_saving" to "保存失败："
         ),
         "fr" to mapOf(
             "app_name" to "VitaAI",
@@ -638,6 +659,7 @@ object LanguageManager {
             "nutritionist_ia" to "Nutritionniste IA",
             "identify_food" to "Identifier l'aliment",
             "my_level" to "Mon niveau et XP",
+            "more" to "Plus",
             "settings" to "Paramètres",
             "logout" to "Se déconnecter",
             "generate_plan" to "Générer mon plan IA 🤖",
@@ -811,7 +833,13 @@ object LanguageManager {
             "ach_level5_t" to "Maître",
             "ach_level5_d" to "Atteignez le niveau max",
             "ach_goal_t" to "Objectif atteint",
-            "ach_goal_d" to "Atteignez votre poids cible"
+            "ach_goal_d" to "Atteignez votre poids cible",
+            "today" to "Aujourd'hui",
+            "yesterday" to "Hier",
+            "add_food" to "Ajouter un aliment",
+            "food_name" to "Nom de l'aliment",
+            "cancel" to "Annuler",
+            "error_saving" to "Erreur sauvegarde : "
         ),
         "pt" to mapOf(
             "app_name" to "VitaAI",
@@ -833,6 +861,7 @@ object LanguageManager {
             "nutritionist_ia" to "Nutricionista IA",
             "identify_food" to "Identificar alimento",
             "my_level" to "Meu nível e XP",
+            "more" to "Mais",
             "settings" to "Configurações",
             "logout" to "Sair",
             "generate_plan" to "Gerar meu plano com IA 🤖",
@@ -1006,7 +1035,13 @@ object LanguageManager {
             "ach_level5_t" to "Mestre",
             "ach_level5_d" to "Alcance o nível máximo",
             "ach_goal_t" to "Meta atingida",
-            "ach_goal_d" to "Atinja seu peso alvo"
+            "ach_goal_d" to "Atinja seu peso alvo",
+            "today" to "Hoje",
+            "yesterday" to "Ontem",
+            "add_food" to "Adicionar comida",
+            "food_name" to "Nome do alimento",
+            "cancel" to "Cancelar",
+            "error_saving" to "Erro ao salvar: "
         )
     )
 }

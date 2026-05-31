@@ -242,6 +242,9 @@ fun PlanAdjustScreen(modifier: Modifier = Modifier) {
                             .addOnSuccessListener {
                                 savedMsg = "✅ Plan actualizado en tu perfil"
                             }
+                            .addOnFailureListener {
+                                savedMsg = "⚠️ Error al guardar"
+                            }
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp)
