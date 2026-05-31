@@ -2,4 +2,14 @@
 <resources>
     <string name="app_name">VitaAI</string>
     <string name="default_web_client_id">210018805867-64hejti4qh5pggqtnjjh8elqbggc8sj0.apps.googleusercontent.com</string>
+
+    <!-- App shortcuts -->
+    <string name="shortcut_camera_short">Camera</string>
+    <string name="shortcut_camera_long">Scan food</string>
+    <string name="shortcut_water_short">Water</string>
+    <string name="shortcut_water_long">Log water</string>
+    <string name="shortcut_chat_short">Chat</string>
+    <string name="shortcut_chat_long">AI nutritionist</string>
+    <string name="shortcut_mood_short">Mood</string>
+    <string name="shortcut_mood_long">Log mood</string>
 </resources>

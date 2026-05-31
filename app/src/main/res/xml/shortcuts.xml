@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="scan_food"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_camera"
+        android:shortcutShortLabel="@string/shortcut_camera_short"
+        android:shortcutLongLabel="@string/shortcut_camera_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.vitaai.app"
+            android:targetClass="com.vitaai.app.MainActivity"
+            android:data="vitaai://shortcut/camera" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="add_water"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_water"
+        android:shortcutShortLabel="@string/shortcut_water_short"
+        android:shortcutLongLabel="@string/shortcut_water_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.vitaai.app"
+            android:targetClass="com.vitaai.app.MainActivity"
+            android:data="vitaai://shortcut/water" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="chat"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_chat"
+        android:shortcutShortLabel="@string/shortcut_chat_short"
+        android:shortcutLongLabel="@string/shortcut_chat_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.vitaai.app"
+            android:targetClass="com.vitaai.app.MainActivity"
+            android:data="vitaai://shortcut/chat" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="mood"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_mood"
+        android:shortcutShortLabel="@string/shortcut_mood_short"
+        android:shortcutLongLabel="@string/shortcut_mood_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.vitaai.app"
+            android:targetClass="com.vitaai.app.MainActivity"
+            android:data="vitaai://shortcut/mood" />
+    </shortcut>
+
+</shortcuts>
