@@ -12,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -168,18 +170,11 @@ fun ChatBubble(msg: ChatMessage) {
         horizontalArrangement = if (msg.isUser) Arrangement.End else Arrangement.Start
     ) {
         if (!msg.isUser) {
-            Box(
+            Image(
+                painter = painterResource(R.drawable.logo_vitaai),
+                contentDescription = null,
                 modifier = Modifier.size(32.dp).clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = IconList.Nutritionist,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = IconList.RobotTeal
-                )
-            }
+            )
             Spacer(Modifier.width(8.dp))
         }
         Box(

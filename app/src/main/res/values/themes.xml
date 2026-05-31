@@ -6,7 +6,7 @@
 
     <style name="Theme.VitaAI.SplashScreen" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#0D2137</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_vitaai</item>
         <item name="postSplashScreenTheme">@style/Theme.VitaAI</item>
     </style>
 </resources>
