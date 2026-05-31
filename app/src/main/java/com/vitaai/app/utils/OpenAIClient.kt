@@ -7,8 +7,8 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-// TODO: Move this key to a secure backend — never ship API keys in the APK
-private const val OPENAI_API_KEY = "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"
+// Key is injected from local.properties via BuildConfig — never hardcoded in source.
+private val OPENAI_API_KEY = com.vitaai.app.BuildConfig.OPENAI_API_KEY
 private const val OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 private const val TIMEOUT_MS = 30_000
 
