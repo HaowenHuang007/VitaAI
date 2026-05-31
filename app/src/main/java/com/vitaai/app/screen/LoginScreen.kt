@@ -18,6 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -224,20 +226,13 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Box(
+            Image(
+                painter = painterResource(R.drawable.logo_vitaai),
+                contentDescription = stringResource(R.string.app_name),
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Gold.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = IconList.Logo,
-                    contentDescription = null,
-                    modifier = Modifier.size(60.dp),
-                    tint = IconList.PlantGreen
-                )
-            }
+            )
 
             Spacer(Modifier.height(20.dp))
             Text(stringResource(R.string.app_name), fontSize = 42.sp, fontWeight = FontWeight.Bold, color = Gold)

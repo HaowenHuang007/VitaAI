@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -179,19 +181,12 @@ fun HomeScreen(
                     Spacer(Modifier.height(48.dp))
                     Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
                         Column {
-                            Box(
+                            Image(
+                                painter = painterResource(R.drawable.logo_vitaai),
+                                contentDescription = null,
                                 modifier = Modifier.size(60.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Gold.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = IconList.Plan,
-                                    contentDescription = null,
-                                    tint = IconList.PlantGreen,
-                                    modifier = Modifier.size(30.dp)
-                                )
-                            }
+                            )
                             Spacer(Modifier.height(8.dp))
                             Text("VitaAI", fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold, color = Gold)
