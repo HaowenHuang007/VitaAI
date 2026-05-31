@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VitaAI</string>
+    <string name="default_web_client_id">210018805867-64hejti4qh5pggqtnjjh8elqbggc8sj0.apps.googleusercontent.com</string>
+
+    <!-- Common -->
+    <string name="common_email">Correo</string>
+    <string name="common_password">Contraseña</string>
+    <string name="common_next">Siguiente</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_verify">Verificar</string>
+    <string name="common_close">Cerrar</string>
+    <string name="common_or">o</string>
+    <string name="common_error_generic">Error: %1$s</string>
+    <string name="common_google">Google</string>
+    <string name="common_xp_reward">+%1$d</string>
+    <string name="common_saved">Guardado</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_kcal_unit">kcal</string>
+    <string name="common_g_unit">g</string>
+    <string name="common_ml_unit">ml</string>
+    <string name="common_kg_unit">kg</string>
+    <string name="common_now">Ahora</string>
+    <string name="common_start">Empezar</string>
+    <string name="common_send">Enviar</string>
+    <string name="common_logout">Cerrar sesión</string>
+    <string name="common_xp_format">+%1$d XP</string>
+    <string name="common_saving">Guardando...</string>
+    <string name="common_xp_claimed_today">XP ya reclamada hoy</string>
+    <string name="common_error_resend">Error al reanudar</string>
+    <string name="common_success">Éxito</string>
+    <string name="common_regenerate">Regenerar</string>
+    <string name="common_delete">Eliminar</string>
+
+    <!-- Home Screen -->
+    <string name="home_good_morning">Buenos días</string>
+    <string name="home_today_nutrition">Nutrición de hoy</string>
+    <string name="home_quick_access">Acceso rápido</string>
+    <string name="home_daily_tip_error">No se pudo cargar el consejo diario</string>
+    <string name="home_my_plan">Mi plan de salud</string>
+    <string name="home_update_plan">Actualizar mi plan</string>
+    <string name="home_generate_plan">Generar mi plan</string>
+    <string name="home_my_goals">Mis objetivos</string>
+    <string name="home_my_progress">Mi progreso</string>
+    <string name="home_weekly_report">Reporte semanal</string>
+    <string name="home_nutritionist_ia">Nutricionista IA</string>
+    <string name="home_identify_food">Identificar comida</string>
+    <string name="home_food_history">Historial de comidas</string>
+    <string name="home_water_tracker">Hidratación</string>
+    <string name="home_exercise_log">Ejercicio</string>
+    <string name="home_achievements">Logros</string>
+    <string name="home_my_level">Mi nivel</string>
+    <string name="home_settings">Ajustes</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_my_account">Mi cuenta</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
+    <string name="settings_language">Idioma</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_en">Inglés</string>
+    <string name="lang_pt">Portugués</string>
+    <string name="lang_fr">Francés</string>
+    <string name="lang_zh">Chino</string>
+    <string name="settings_notifications">Notificaciones</string>
+    <string name="settings_notif_water_title">Recordatorio de agua</string>
+    <string name="settings_notif_water_desc">Recordatorios cada 3 horas</string>
+    <string name="settings_notif_evening_title">Registro nocturno</string>
+    <string name="settings_notif_evening_desc">Todas las noches a las 20:00</string>
+    <string name="settings_bmr_calculator">Calculadora TMB</string>
+    <string name="settings_bmr_subtitle">TMB, TDEE y macros recomendados</string>
+    <string name="settings_change_password">Cambiar contraseña</string>
+    <string name="settings_current_password">Contraseña actual</string>
+    <string name="settings_new_password">Nueva contraseña</string>
+    <string name="settings_confirm_password">Confirmar nueva contraseña</string>
+    <string name="settings_update_password">Actualizar contraseña</string>
+    <string name="settings_pwd_no_match">Las contraseñas no coinciden</string>
+    <string name="settings_pwd_too_short">La contraseña debe tener al menos 6 caracteres</string>
+    <string name="settings_pwd_update_failed">Error al actualizar contraseña</string>
+    <string name="settings_pwd_wrong_current">Contraseña actual incorrecta</string>
+    <string name="settings_update_password_success">Contraseña actualizada con éxito</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">VitaAI</string>
+    <string name="notif_channel_desc">Recordatorios de salud</string>
+    <string name="notif_water_title">Hora de hidratarse</string>
+    <string name="notif_water_body">Bebe un vaso de agua y mantente en tu objetivo</string>
+    <string name="notif_evening_title">Registra tu día</string>
+    <string name="notif_evening_body">Registra tu peso, calorías y estado de ánimo</string>
+
+    <!-- Verify Screen -->
+    <string name="verify_title">Verifica tu correo</string>
+    <string name="verify_sent_desc">Hemos enviado un correo de verificación a: %1$s</string>
+    <string name="verify_instruction">Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.</string>
+    <string name="verify_button_done">Verificado, ir al login</string>
+    <string name="verify_button_resend">Reenviar correo de verificación</string>
+    <string name="verify_resend_success">Correo reenviado</string>
+
+    <!-- Water Tracker -->
+    <string name="water_quick_add">Añadir rápido</string>
+    <string name="water_reset_today">Reiniciar hoy</string>
+    <string name="water_ml_format">%1$d ml</string>
+    <string name="water_goal_format">Objetivo: %1$d ml</string>
+
+    <!-- Weekly Report -->
+    <string name="report_title">Reporte semanal</string>
+    <string name="report_analyzing">Analizando tu semana...</string>
+    <string name="report_no_data">Necesitas datos de los últimos 7 días para generar el reporte</string>
+
+    <!-- Progress Screen -->
+    <string name="progress_title">Mi progreso</string>
+    <string name="progress_today_log">Registro de hoy</string>
+    <string name="progress_save_today">Guardar hoy</string>
+    <string name="progress_weight_evolution">Evolución de peso</string>
+    <string name="progress_weight_short">Peso</string>
+    <string name="progress_daily_calories">Calorías diarias</string>
+    <string name="progress_no_data">Sin datos aún. ¡Registra tu primer día!</string>
+    <string name="progress_saved_xp_format">Guardado. +%1$d XP</string>
+    <string name="progress_saved_no_xp">Guardado (XP ya reclamada hoy)</string>
+
+    <!-- Questionnaire Screen -->
+    <string name="ques_loading">Cargando tu plan...</string>
+    <string name="ques_current_plan">Tu plan actual</string>
+    <string name="ques_saved_desc">Tu plan personalizado guardado</string>
+    <string name="ques_diet_label">Plan de dieta</string>
+    <string name="ques_exercise_label">Plan de ejercicio</string>
+    <string name="ques_update_btn">Actualizar mi plan</string>
+    <string name="ques_profile_title">Tu perfil</string>
+    <string name="ques_update_title">Actualizar perfil</string>
+    <string name="ques_tell_us">Cuéntanos sobre ti</string>
+    <string name="ques_age">Edad</string>
+    <string name="ques_weight">Peso (kg)</string>
+    <string name="ques_height">Altura (cm)</string>
+    <string name="ques_goal_section">Objetivo</string>
+    <string name="ques_activity_section">Nivel de actividad</string>
+    <string name="ques_see_plan">Ver plan actual</string>
+
+    <string name="goal_lose_weight">Perder peso</string>
+    <string name="goal_gain_muscle">Ganar músculo</string>
+    <string name="goal_maintain_weight">Mantener peso</string>
+    <string name="goal_improve_health">Mejorar salud</string>
+
+    <string name="act_sedentary">Sedentario</string>
+    <string name="act_light">Ligero</string>
+    <string name="act_moderate">Moderado</string>
+    <string name="act_active">Activo</string>
+    <string name="act_very_active">Muy activo</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Crear cuenta</string>
+    <string name="register_tagline">Comienza tu camino saludable</string>
+    <string name="register_data_title">Tus datos</string>
+    <string name="register_username_label">Nombre de usuario</string>
+    <string name="register_security_question_section">Pregunta de seguridad</string>
+    <string name="register_security_question_desc">Para recuperar tu contraseña si la olvidas</string>
+    <string name="register_select_question_label">Selecciona una pregunta</string>
+    <string name="register_error_select_question">Selecciona una pregunta de seguridad</string>
+    <string name="register_error_empty_answer">Escribe tu respuesta de seguridad</string>
+    <string name="register_error_uid_null">Error: No se pudo obtener el ID de usuario</string>
+    <string name="register_error_save_profile">Error al guardar perfil: %1$s</string>
+    <string name="register_error_create_account">Error al crear cuenta: %1$s</string>
+    <string name="register_button">Registrarse</string>
+    <string name="register_go_to_login">¿Ya tienes cuenta? Inicia sesión</string>
+
+    <string name="security_q1">¿Cuál es el nombre de tu primera mascota?</string>
+    <string name="security_q2">¿En qué ciudad naciste?</string>
+    <string name="security_q3">¿Cuál es tu color favorito?</string>
+    <string name="security_q4">¿Cómo se llamaba tu escuela primaria?</string>
+    <string name="security_q5">¿Cuál es tu comida favorita?</string>
+
+    <!-- Login Screen -->
+    <string name="login_tagline">Tu asistente de salud inteligente</string>
+    <string name="login_title">Iniciar sesión</string>
+    <string name="login_google_button">Continuar con Google</string>
+    <string name="login_forgot_password_link">¿Olvidaste tu contraseña?</string>
+    <string name="login_error_invalid_credentials">Correo o contraseña incorrectos</string>
+    <string name="login_go_to_register">¿Sin cuenta? Regístrate</string>
+
+    <!-- Forgot Password Dialogs -->
+    <string name="login_forgot_password_title">Recuperar contraseña</string>
+    <string name="login_forgot_password_desc">Introduce tu correo registrado</string>
+    <string name="login_error_no_account">No existe una cuenta con ese correo</string>
+    <string name="login_error_search_account">Error al buscar la cuenta</string>
+    <string name="login_security_question_title">Pregunta de seguridad</string>
+    <string name="login_security_answer_label">Tu respuesta</string>
+    <string name="login_email_sent_success">Correo enviado a %1$s</string>
+    <string name="login_error_send_email">Error al enviar el correo</string>
+    <string name="login_error_wrong_answer">Respuesta incorrecta</string>
+    <string name="login_error_create_profile">Error al crear perfil: %1$s</string>
+    <string name="login_error_google_sign_in">Error al iniciar sesión con Google</string>
+
+    <!-- Achievements Screen -->
+    <string name="achievements_title">Logros</string>
+    <string name="achievements_unlocked_label">Desbloqueados</string>
+    <string name="achievements_progress_format">%1$d / %2$d</string>
+
+    <!-- BMR Calculator Screen -->
+    <string name="bmr_calculator_title">Calculadora TMB</string>
+    <string name="bmi_label">IMC</string>
+    <string name="bmi_result_format">IMC: %1$.1f</string>
+    <string name="bmr_label">TMB</string>
+    <string name="bmr_unit_format">%1$d kcal</string>
+    <string name="recommended_targets_title">Objetivos recomendados</string>
+    <string name="calories_label">Calorías</string>
+    <string name="protein_label">Proteínas</string>
+    <string name="carbs_label">Carbohidratos</string>
+    <string name="fat_label">Grasas</string>
+    <string name="water_label">Agua</string>
+    <string name="gram_unit_format">%1$d g</string>
+    <string name="ml_unit_format">%1$d ml</string>
+    <string name="bmr_explain">Calorías en reposo</string>
+    <string name="tdee_explain">Gasto diario total</string>
+
+    <!-- Camera Screen -->
+    <string name="camera_point_at_food">Apunta a la comida</string>
+    <string name="camera_nutritional_analysis">Análisis nutricional</string>
+    <string name="camera_ai_result">Resultado IA</string>
+    <string name="camera_save_to_log">Guardar en mi registro</string>
+    <string name="camera_take_another_photo">Tomar otra foto</string>
+    <string name="camera_permission_required">Se requiere acceso a la cámara para identificar comidas</string>
+    <string name="camera_grant_permission">Dar permiso</string>
+    <string name="camera_error_analyzing">Error al analizar</string>
+    <string name="camera_saved_xp_format">Guardado. +%1$d XP</string>
+    <string name="camera_saved_limit">Guardado (máximo diario alcanzado)</string>
+
+    <!-- Chat Screen -->
+    <string name="chat_ask_me">Pregúntame algo...</string>
+    <string name="chat_error">Lo siento, hubo un error. Inténtalo de nuevo.</string>
+    <string name="chat_welcome">¡Hola! Soy tu nutricionista personal IA. Puedo ayudarte con consejos sobre comida, analizar tus platos y ajustar tu plan. ¿Cómo puedo ayudarte hoy?</string>
+
+    <!-- Exercise Screen -->
+    <string name="exercise_log_title">Registro de ejercicio</string>
+    <string name="exercise_choose">Elige un ejercicio</string>
+    <string name="exercise_duration_label">Duración (HH:mm)</string>
+    <string name="exercise_time_label">Hora (HH:mm)</string>
+    <string name="exercise_recent_history">Historial reciente</string>
+    <string name="exercise_approx_format">aprox %1$d kcal</string>
+    <string name="exercise_saved_format">Guardado. %1$d kcal</string>
+    <string name="exercise_history_item_format">%1$d min. %2$s</string>
+    <string name="ex_walking">Caminata</string>
+    <string name="ex_running">Correr</string>
+    <string name="ex_cycling">Ciclismo</string>
+    <string name="ex_swimming">Natación</string>
+    <string name="ex_yoga">Yoga</string>
+    <string name="ex_gym">Gimnasio</string>
+    <string name="ex_dance">Baile</string>
+    <string name="ex_hiit">HIIT</string>
+
+    <!-- Food History -->
+    <string name="food_history_title">Historial de comidas</string>
+    <string name="food_history_no_data">Aún no has registrado comidas</string>
+    <string name="food_history_item_format">%1$d kcal. P%2$d. C%3$d. G%4$d</string>
+    <string name="food_history_default_item">Salmón con espárragos</string>
+    <string name="food_history_item_macros_format">%1$d %2$s. P: %3$dg C: %4$dg G: %5$dg</string>
+
+    <!-- Goals Screen -->
+    <string name="goals_title">Mis objetivos</string>
+    <string name="goals_current">Objetivo actual</string>
+    <string name="goals_days_left">faltan %1$d días</string>
+    <string name="goals_now">Ahora</string>
+    <string name="goals_start">Inicio</string>
+    <string name="goals_set">Establecer objetivo</string>
+    <string name="goals_target_weight">Peso objetivo (kg)</string>
+    <string name="goals_target_date_hint">Fecha objetivo (YYYY-MM-DD)</string>
+    <string name="goals_save_button">Guardar objetivo</string>
+    <string name="goals_weight_format">%1$.1f kg</string>
+
+    <!-- Level Screen -->
+    <string name="level_label">Nivel</string>
+    <string name="level_xp_to_next">faltan %1$d XP para el siguiente nivel</string>
+    <string name="level_max_reached">¡Nivel máximo alcanzado!</string>
+    <string name="level_how_to_earn">Cómo ganar XP</string>
+    <string name="level_all_levels">Todos los niveles</string>
+    <string name="level_from_xp">Desde %1$d XP</string>
+    <string name="level_current_tag">ACTUAL</string>
+    <string name="level_beginner">Principiante</string>
+    <string name="level_apprentice">Aprendiz</string>
+    <string name="level_athlete">Atleta</string>
+    <string name="level_expert">Experto</string>
+    <string name="level_master">Maestro</string>
+    <string name="level_xp_action_progress">Registrar progreso diario</string>
+    <string name="level_xp_action_plan">Generar plan con IA</string>
+    <string name="level_xp_action_food">Identificar comida</string>
+    <string name="level_xp_action_chat">Chatear con nutricionista</string>
+    <string name="level_xp_action_mood">Registrar ánimo</string>
+
+    <!-- Mood Screen -->
+    <string name="mood_how_are_you">¿Cómo estás hoy?</string>
+    <string name="mood_affects_nutrition">Tu ánimo afecta tu nutrición</string>
+    <string name="mood_get_recommendation">Obtener recomendación personalizada</string>
+    <string name="mood_daily_tip">Consejo diario</string>
+    <string name="mood_understood">¡Entendido, vamos!</string>
+    <string name="mood_great_label">Genial</string>
+    <string name="mood_great_desc">Me siento con energía y motivado</string>
+    <string name="mood_good_label">Bien</string>
+    <string name="mood_good_desc">Me siento tranquilo y positivo</string>
+    <string name="mood_normal_label">Normal</string>
+    <string name="mood_normal_desc">Ni bien ni mal, un día normal</string>
+    <string name="mood_sad_label">Triste</string>
+    <string name="mood_sad_desc">Me siento desanimado</string>
+    <string name="mood_stressed_label">Estresado</string>
+    <string name="mood_stressed_desc">Tengo mucha presión y ansiedad</string>
+    <string name="mood_tired_label">Cansado</string>
+    <string name="mood_tired_desc">Me siento agotado y sin energía</string>
+    <string name="mood_irritable_label">Irritable</string>
+    <string name="mood_irritable_desc">Me siento de mal humor</string>
+    <string name="mood_unwell_label">Malestar</string>
+    <string name="mood_unwell_desc">Me siento enfermo o indispuesto</string>
+
+    <!-- Plan Adjust Screen -->
+    <string name="plan_adjust_title">Ajuste de plan inteligente</string>
+    <string name="plan_adjust_subtitle">La IA analiza tu progreso real y ajusta tu plan</string>
+    <string name="plan_adjust_recent">Tu progreso reciente</string>
+    <string name="plan_adjust_stat_start">Peso inicial</string>
+    <string name="plan_adjust_stat_current">Peso actual</string>
+    <string name="plan_adjust_stat_change">Cambio</string>
+    <string name="plan_adjust_avg_calories">Promedio de calorías: %1$d kcal/día</string>
+    <string name="plan_adjust_goal_label">Objetivo: %1$s</string>
+    <string name="plan_adjust_analyzing">Analizando tu progreso...</string>
+    <string name="plan_adjust_analyze_button">Analizar y ajustar mi plan</string>
+    <string name="plan_adjust_analysis_label">Análisis de tu progreso</string>
+    <string name="plan_adjust_diet_label">Nuevo plan de dieta</string>
+    <string name="plan_adjust_exercise_label">Nuevo plan de ejercicio</string>
+    <string name="plan_adjust_save_button">Guardar nuevo plan</string>
+    <string name="plan_adjust_no_data">Aún no tienes datos de progreso</string>
+    <string name="plan_adjust_no_data_desc">Registra al menos unos días en Mi progreso para que la IA pueda ajustar tu plan</string>
+
+    <!-- Plan Screen -->
+    <string name="plan_summary_format">%1$d años. %2$.1fkg. %3$.1fcm. IMC %4$s</string>
+    <string name="plan_generating">Analizando tu perfil y generando tu plan personalizado...</string>
+    <string name="plan_back_home">Volver al inicio</string>
+    <string name="plan_current_title">Tu plan actual</string>
+    <string name="plan_diet_title">Plan de dieta</string>
+    <string name="plan_exercise_title">Plan de ejercicio</string>
+
+    <!-- Achievements keys -->
+    <string name="ach_first_plan_t">Primer plan</string>
+    <string name="ach_first_plan_d">Genera tu primer plan con IA</string>
+    <string name="ach_first_food_t">Primer escaneo</string>
+    <string name="ach_first_food_d">Identifica tu primera comida</string>
+    <string name="ach_first_chat_t">Primera consulta</string>
+    <string name="ach_first_chat_d">Habla con el nutricionista IA</string>
+    <string name="ach_first_mood_t">Primer ánimo</string>
+    <string name="ach_first_mood_d">Registra cómo te sientes</string>
+    <string name="ach_first_water_t">Hidratación</string>
+    <string name="ach_first_water_d">Registra tu primer vaso de agua</string>
+    <string name="ach_first_exercise_t">Primer ejercicio</string>
+    <string name="ach_first_exercise_d">Registra una sesión de ejercicio</string>
+    <string name="ach_streak3_t">Racha de 3</string>
+    <string name="ach_streak3_d">3 días activos seguidos</string>
+    <string name="ach_streak7_t">Racha de 7</string>
+    <string name="ach_streak7_d">Toda una semana sin fallar</string>
+    <string name="ach_streak30_t">Racha de 30</string>
+    <string name="ach_streak30_d">30 días seguidos. Imparable</string>
+    <string name="ach_water_goal_t">Meta de agua</string>
+    <string name="ach_water_goal_d">Cumple tu meta diaria de agua</string>
+    <string name="ach_food10_t">10 comidas</string>
+    <string name="ach_food10_d">Escanea 10 comidas</string>
+    <string name="ach_food50_t">50 comidas</string>
+    <string name="ach_food50_d">Escanea 50 comidas</string>
+    <string name="ach_level3_t">Atleta</string>
+    <string name="ach_level3_d">Llega al nivel 3</string>
+    <string name="ach_level5_t">Maestro</string>
+    <string name="ach_level5_d">Llega al nivel máximo</string>
+    <string name="ach_goal_t">Meta alcanzada</string>
+    <string name="ach_goal_d">Llega a tu peso objetivo</string>
+</resources>

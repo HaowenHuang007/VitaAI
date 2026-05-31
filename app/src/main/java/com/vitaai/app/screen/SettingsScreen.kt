@@ -44,8 +44,8 @@ fun SettingsScreen(
     var successMsg by remember { mutableStateOf("") }
     var errorMsg by remember { mutableStateOf("") }
 
-    val currentLang by LanguageManager.currentLanguage
     val themeMode by ThemeManager.mode
+    val currentLang by LanguageManager.currentLanguage
 
     val (initWater, initEvening) = remember { NotificationScheduler.loadPrefs(context) }
     var waterNotif by remember { mutableStateOf(initWater) }
@@ -76,49 +76,6 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // Selector de idioma
-        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(IconList.Language, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.settings_select_language), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
-                Spacer(Modifier.height(16.dp))
-
-                LanguageManager.languages.forEach { (code, _, name) ->
-                    val isSelected = currentLang == code
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isSelected) NavyBlue.copy(alpha = 0.1f) else Color.Transparent)
-                            .clickable {
-                                LanguageManager.setLanguage(context, code)
-                                val intent = (context as android.app.Activity).intent
-                                context.finish()
-                                context.startActivity(intent)
-                            }
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(name, fontSize = 15.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) NavyBlue else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f))
-                        if (isSelected) {
-                            Icon(IconList.Done, null, tint = Gold, modifier = Modifier.size(20.dp))
-                        }
-                    }
-                    if (code != LanguageManager.languages.last().first) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(24.dp))
-
         // ===== TEMA =====
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -134,10 +91,14 @@ fun SettingsScreen(
                     ThemeManager.MODE_DARK to R.string.settings_theme_dark
                 ).forEach { (mode, resId) ->
                     val isSel = themeMode == mode
+                    val itemBg = if (isSel) NavyBlue.copy(alpha = 0.1f) else Color.Transparent
+                    val itemColor = if (isSel) NavyBlue else MaterialTheme.colorScheme.onSurface
+                    val itemWeight = if (isSel) FontWeight.Bold else FontWeight.Normal
+
                     Row(
                         modifier = Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (isSel) NavyBlue.copy(alpha = 0.1f) else Color.Transparent)
+                            .background(itemBg)
                             .clickable { ThemeManager.setMode(context, mode) }
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -150,13 +111,60 @@ fun SettingsScreen(
                             },
                             contentDescription = null,
                             modifier = Modifier.size(22.dp),
-                            tint = if (isSel) NavyBlue else MaterialTheme.colorScheme.onSurface
+                            tint = itemColor
                         )
                         Spacer(Modifier.width(12.dp))
-                        Text(stringResource(resId), fontSize = 15.sp,
-                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSel) NavyBlue else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f))
+                        Text(
+                            text = stringResource(resId),
+                            fontSize = 15.sp,
+                            fontWeight = itemWeight,
+                            color = itemColor,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (isSel) Icon(IconList.Done, null, tint = Gold, modifier = Modifier.size(20.dp))
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // ===== IDIOMA =====
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(IconList.Language, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.settings_language), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(12.dp))
+                listOf(
+                    LanguageManager.LANG_ES to R.string.lang_es,
+                    LanguageManager.LANG_EN to R.string.lang_en,
+                    LanguageManager.LANG_PT to R.string.lang_pt,
+                    LanguageManager.LANG_FR to R.string.lang_fr,
+                    LanguageManager.LANG_ZH to R.string.lang_zh
+                ).forEach { (langCode, resId) ->
+                    val isSel = currentLang == langCode
+                    val itemBg = if (isSel) NavyBlue.copy(alpha = 0.1f) else Color.Transparent
+                    val itemColor = if (isSel) NavyBlue else MaterialTheme.colorScheme.onSurface
+                    val itemWeight = if (isSel) FontWeight.Bold else FontWeight.Normal
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(itemBg)
+                            .clickable { LanguageManager.setLanguage(context, langCode) }
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(resId),
+                            fontSize = 15.sp,
+                            fontWeight = itemWeight,
+                            color = itemColor,
+                            modifier = Modifier.weight(1f)
+                        )
                         if (isSel) Icon(IconList.Done, null, tint = Gold, modifier = Modifier.size(20.dp))
                     }
                 }

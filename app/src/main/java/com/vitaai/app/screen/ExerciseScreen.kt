@@ -7,6 +7,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,15 +48,17 @@ private const val ACHIEVEMENT_FIRST_EXERCISE = "first_exercise"
 
 private data class ExerciseType(val key: String, val metPerMin: Double)
 
+private const val HOUR = 60
+
 private val EXERCISE_TYPES = listOf(
-    ExerciseType("walking", 3.5 / 60),
-    ExerciseType("running", 9.8 / 60),
-    ExerciseType("cycling", 7.5 / 60),
-    ExerciseType("swimming", 8.0 / 60),
-    ExerciseType("yoga", 2.5 / 60),
-    ExerciseType("gym", 6.0 / 60),
-    ExerciseType("dance", 5.0 / 60),
-    ExerciseType("hiit", 10.0 / 60)
+    ExerciseType("walking", 3.5 / HOUR),
+    ExerciseType("running", 9.8 / HOUR),
+    ExerciseType("cycling", 7.5 / HOUR),
+    ExerciseType("swimming", 8.0 / HOUR),
+    ExerciseType("yoga", 2.5 / HOUR),
+    ExerciseType("gym", 6.0 / HOUR),
+    ExerciseType("dance", 5.0 / HOUR),
+    ExerciseType("hiit", 10.0 / HOUR)
 )
 
 data class ExerciseEntry(
@@ -101,8 +105,9 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
             }
     }
 
-    val parsedDuration = duration.toIntOrNull()
-    val estimatedCals = if (selected != null && parsedDuration != null)
+    val parsedDuration = duration.toIntOrNull() ?: 0
+
+    val estimatedCals = if (selected != null && parsedDuration > 0)
         (selected!!.metPerMin * parsedDuration * weight).toInt() else 0
 
     Column(
@@ -175,7 +180,9 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(
                 value = duration,
-                onValueChange = { new -> if (new.all { it.isDigit() } && new.length <= 3) duration = new },
+                onValueChange = { new -> 
+                    if (new.all { it.isDigit() } && new.length <= 3) duration = new 
+                },
                 label = { Text(stringResource(R.string.exercise_duration_min)) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp), singleLine = true,
@@ -184,10 +191,29 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
 
             OutlinedTextField(
                 value = exerciseTime,
-                onValueChange = { exerciseTime = it },
-                label = { Text(stringResource(R.string.exercise_duration_min)) },
+                onValueChange = { new ->
+                    val clean = new.replace(":", "").filter { it.isDigit() }
+                    if (clean.length <= 4) {
+                        val isValid = when (clean.length) {
+                            1 -> true
+                            2 -> clean.toInt() in 0..23
+                            3 -> clean.substring(0, 2).toInt() in 0..23 && clean[2].digitToInt() in 0..5
+                            4 -> clean.substring(0, 2).toInt() in 0..23 && clean.substring(2).toInt() in 0..59
+                            else -> true
+                        }
+                        if (isValid) {
+                            exerciseTime = when {
+                                clean.length >= 3 -> "${clean.substring(0, 2)}:${clean.substring(2)}"
+                                else -> clean
+                            }
+                        }
+                    }
+                },
+                label = { Text(stringResource(R.string.exercise_time_label)) },
+                placeholder = { Text("00:00") },
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp), singleLine = true
+                shape = RoundedCornerShape(12.dp), singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
         }
 
@@ -206,7 +232,8 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
         Button(
             onClick = {
                 val t = selected ?: return@Button
-                val d = parsedDuration ?: return@Button
+                val d = parsedDuration
+                if (d <= 0) return@Button
                 db.collection(USERS_COLLECTION).document(uid).collection(EXERCISES_COLLECTION)
                     .add(mapOf(
                         FIELD_TYPE_KEY to t.key,
@@ -228,7 +255,7 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
             },
             modifier = Modifier.fillMaxWidth().height(52.dp),
             shape = RoundedCornerShape(12.dp),
-            enabled = selected != null && (parsedDuration ?: 0) in 1..600
+            enabled = selected != null && parsedDuration in 1..600
         ) { 
             Text(stringResource(R.string.common_save), fontSize = 16.sp) 
         }
@@ -288,6 +315,18 @@ fun ExerciseScreen(modifier: Modifier = Modifier) {
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    IconButton(
+                        onClick = {
+                            db.collection(USERS_COLLECTION).document(uid)
+                                .collection(EXERCISES_COLLECTION).document(e.id).delete()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.common_delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }

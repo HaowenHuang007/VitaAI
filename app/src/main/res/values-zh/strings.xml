@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VitaAI</string>
+    <string name="default_web_client_id">210018805867-64hejti4qh5pggqtnjjh8elqbggc8sj0.apps.googleusercontent.com</string>
+
+    <!-- Common -->
+    <string name="common_email">电子邮件</string>
+    <string name="common_password">密码</string>
+    <string name="common_next">下一步</string>
+    <string name="common_cancel">取消</string>
+    <string name="common_verify">验证</string>
+    <string name="common_close">关闭</string>
+    <string name="common_or">或</string>
+    <string name="common_error_generic">错误: %1$s</string>
+    <string name="common_google">Google</string>
+    <string name="common_xp_reward">+%1$d</string>
+    <string name="common_saved">已保存</string>
+    <string name="common_save">保存</string>
+    <string name="common_kcal_unit">千卡</string>
+    <string name="common_g_unit">克</string>
+    <string name="common_ml_unit">毫升</string>
+    <string name="common_kg_unit">公斤</string>
+    <string name="common_now">现在</string>
+    <string name="common_start">开始</string>
+    <string name="common_send">发送</string>
+    <string name="common_logout">登出</string>
+    <string name="common_xp_format">+%1$d XP</string>
+    <string name="common_saving">保存中...</string>
+    <string name="common_xp_claimed_today">今日已领取经验值</string>
+    <string name="common_error_resend">重发错误</string>
+    <string name="common_success">成功</string>
+    <string name="common_regenerate">重新生成</string>
+    <string name="common_delete">删除</string>
+
+    <!-- Home Screen -->
+    <string name="home_good_morning">早上好</string>
+    <string name="home_today_nutrition">今日营养</string>
+    <string name="home_quick_access">快速访问</string>
+    <string name="home_daily_tip_error">无法加载每日小贴士</string>
+    <string name="home_my_plan">我的健康计划</string>
+    <string name="home_update_plan">更新我的计划</string>
+    <string name="home_generate_plan">生成我的计划</string>
+    <string name="home_my_goals">我的目标</string>
+    <string name="home_my_progress">我的进展</string>
+    <string name="home_weekly_report">周报</string>
+    <string name="home_nutritionist_ia">AI 营养师</string>
+    <string name="home_identify_food">识别食物</string>
+    <string name="home_food_history">饮食记录</string>
+    <string name="home_water_tracker">补水追踪</string>
+    <string name="home_exercise_log">运动记录</string>
+    <string name="home_achievements">成就</string>
+    <string name="home_my_level">我的等级</string>
+    <string name="home_settings">设置</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_my_account">我的账户</string>
+    <string name="settings_theme">主题</string>
+    <string name="settings_theme_system">系统默认</string>
+    <string name="settings_theme_light">浅色模式</string>
+    <string name="settings_theme_dark">深色模式</string>
+    <string name="settings_language">语言</string>
+    <string name="lang_es">西班牙语</string>
+    <string name="lang_en">英语</string>
+    <string name="lang_pt">葡萄牙语</string>
+    <string name="lang_fr">法语</string>
+    <string name="lang_zh">中文</string>
+    <string name="settings_notifications">通知</string>
+    <string name="settings_notif_water_title">饮水提醒</string>
+    <string name="settings_notif_water_desc">每3小时提醒一次</string>
+    <string name="settings_notif_evening_title">晚间记录</string>
+    <string name="settings_notif_evening_desc">每晚 20:00</string>
+    <string name="settings_bmr_calculator">基础代谢率计算器</string>
+    <string name="settings_bmr_subtitle">BMR, TDEE 和推荐宏量元素</string>
+    <string name="settings_change_password">修改密码</string>
+    <string name="settings_current_password">当前密码</string>
+    <string name="settings_new_password">新密码</string>
+    <string name="settings_confirm_password">确认新密码</string>
+    <string name="settings_update_password">更新密码</string>
+    <string name="settings_pwd_no_match">密码不匹配</string>
+    <string name="settings_pwd_too_short">密码必须至少包含 6 个字符</string>
+    <string name="settings_pwd_update_failed">更新密码失败</string>
+    <string name="settings_pwd_wrong_current">当前密码错误</string>
+    <string name="settings_update_password_success">密码更新成功</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">VitaAI</string>
+    <string name="notif_channel_desc">健康提醒</string>
+    <string name="notif_water_title">补水时间</string>
+    <string name="notif_water_body">喝一杯水，保持目标</string>
+    <string name="notif_evening_title">记录你的一天</string>
+    <string name="notif_evening_body">记录你的体重、卡路里和心情</string>
+
+    <!-- Verify Screen -->
+    <string name="verify_title">验证您的电子邮箱</string>
+    <string name="verify_sent_desc">我们已向以下地址发送验证邮件: %1$s</string>
+    <string name="verify_instruction">请检查您的收件箱并点击链接以激活您的账户。</string>
+    <string name="verify_button_done">我已验证，前往登录</string>
+    <string name="verify_button_resend">重发验证邮件</string>
+    <string name="verify_resend_success">邮件已重发</string>
+
+    <!-- Water Tracker -->
+    <string name="water_quick_add">快速添加</string>
+    <string name="water_reset_today">重置今日数据</string>
+    <string name="water_ml_format">%1$d 毫升</string>
+    <string name="water_goal_format">目标: %1$d 毫升</string>
+
+    <!-- Weekly Report -->
+    <string name="report_title">周报</string>
+    <string name="report_analyzing">正在分析您本周的数据...</string>
+    <string name="report_no_data">您需要最近 7 天的数据来生成报告</string>
+
+    <!-- Progress Screen -->
+    <string name="progress_title">我的进展</string>
+    <string name="progress_today_log">今日记录</string>
+    <string name="progress_save_today">保存今日数据</string>
+    <string name="progress_weight_evolution">体重演变</string>
+    <string name="progress_weight_short">体重</string>
+    <string name="progress_daily_calories">每日卡路里</string>
+    <string name="progress_no_data">暂无数据。记录您的第一天！</string>
+    <string name="progress_saved_xp_format">已保存。+%1$d XP</string>
+    <string name="progress_saved_no_xp">已保存 (今日经验值已领取)</string>
+
+    <!-- Questionnaire Screen -->
+    <string name="ques_loading">正在加载您的计划...</string>
+    <string name="ques_current_plan">您当前的计划</string>
+    <string name="ques_saved_desc">您保存的个性化计划</string>
+    <string name="ques_diet_label">饮食计划</string>
+    <string name="ques_exercise_label">运动计划</string>
+    <string name="ques_update_btn">更新我的计划</string>
+    <string name="ques_profile_title">您的个人资料</string>
+    <string name="ques_update_title">更新个人资料</string>
+    <string name="ques_tell_us">向我们介绍一下您自己</string>
+    <string name="ques_age">年龄</string>
+    <string name="ques_weight">体重 (公斤)</string>
+    <string name="ques_height">身高 (厘米)</string>
+    <string name="ques_goal_section">目标</string>
+    <string name="ques_activity_section">活动水平</string>
+    <string name="ques_see_plan">查看当前计划</string>
+
+    <string name="goal_lose_weight">减轻体重</string>
+    <string name="goal_gain_muscle">增加肌肉</string>
+    <string name="goal_maintain_weight">保持体重</string>
+    <string name="goal_improve_health">改善健康</string>
+
+    <string name="act_sedentary">久坐不动</string>
+    <string name="act_light">轻度活动</string>
+    <string name="act_moderate">中度活动</string>
+    <string name="act_active">活跃</string>
+    <string name="act_very_active">非常活跃</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">创建账户</string>
+    <string name="register_tagline">开始您的健康之路</string>
+    <string name="register_data_title">您的数据</string>
+    <string name="register_username_label">用户名</string>
+    <string name="register_security_question_section">安全问题</string>
+    <string name="register_security_question_desc">用于在忘记密码时找回密码</string>
+    <string name="register_select_question_label">选择一个问题</string>
+    <string name="register_error_select_question">请选择一个安全问题</string>
+    <string name="register_error_empty_answer">请输入您的安全答案</string>
+    <string name="register_error_uid_null">错误: 无法获取用户 ID</string>
+    <string name="register_error_save_profile">保存个人资料时出错: %1$s</string>
+    <string name="register_error_create_account">创建账户时出错: %1$s</string>
+    <string name="register_button">注册</string>
+    <string name="register_go_to_login">已有账户？立即登录</string>
+
+    <string name="security_q1">您第一只宠物的名字是什么？</string>
+    <string name="security_q2">您出生在哪个城市？</string>
+    <string name="security_q3">您最喜欢的颜色是什么？</string>
+    <string name="security_q4">您的小学名字是什么？</string>
+    <string name="security_q5">您最喜欢的食物是什么？</string>
+
+    <!-- Login Screen -->
+    <string name="login_tagline">您的智能健康助手</string>
+    <string name="login_title">登录</string>
+    <string name="login_google_button">使用 Google 继续</string>
+    <string name="login_forgot_password_link">忘记密码？</string>
+    <string name="login_error_invalid_credentials">电子邮件或密码错误</string>
+    <string name="login_go_to_register">没有账户？立即注册</string>
+
+    <!-- Forgot Password Dialogs -->
+    <string name="login_forgot_password_title">找回密码</string>
+    <string name="login_forgot_password_desc">输入您注册的电子邮箱</string>
+    <string name="login_error_no_account">该邮箱对应的账户不存在</string>
+    <string name="login_error_search_account">搜索账户时出错</string>
+    <string name="login_security_question_title">安全问题</string>
+    <string name="login_security_answer_label">您的答案</string>
+    <string name="login_email_sent_success">验证邮件已发送至 %1$s</string>
+    <string name="login_error_send_email">发送邮件时出错</string>
+    <string name="login_error_wrong_answer">答案错误</string>
+    <string name="login_error_create_profile">创建个人资料时出错: %1$s</string>
+    <string name="login_error_google_sign_in">Google 登录错误</string>
+
+    <!-- Achievements Screen -->
+    <string name="achievements_title">成就</string>
+    <string name="achievements_unlocked_label">已解锁</string>
+    <string name="achievements_progress_format">%1$d / %2$d</string>
+
+    <!-- BMR Calculator Screen -->
+    <string name="bmr_calculator_title">BMR 计算器</string>
+    <string name="bmi_label">BMI</string>
+    <string name="bmi_result_format">BMI: %1$.1f</string>
+    <string name="bmr_label">BMR</string>
+    <string name="bmr_unit_format">%1$d 千卡</string>
+    <string name="recommended_targets_title">推荐目标</string>
+    <string name="calories_label">卡路里</string>
+    <string name="protein_label">蛋白质</string>
+    <string name="carbs_label">碳水化合物</string>
+    <string name="fat_label">脂肪</string>
+    <string name="water_label">饮水量</string>
+    <string name="gram_unit_format">%1$d 克</string>
+    <string name="ml_unit_format">%1$d 毫升</string>
+    <string name="bmr_explain">静息卡路里</string>
+    <string name="tdee_explain">每日总支出</string>
+
+    <!-- Camera Screen -->
+    <string name="camera_point_at_food">对准食物</string>
+    <string name="camera_nutritional_analysis">营养分析</string>
+    <string name="camera_ai_result">AI 结果</string>
+    <string name="camera_save_to_log">保存到我的记录</string>
+    <string name="camera_take_another_photo">拍摄另一张照片</string>
+    <string name="camera_permission_required">需要相机权限以识别食物</string>
+    <string name="camera_grant_permission">授予权限</string>
+    <string name="camera_error_analyzing">分析时出错</string>
+    <string name="camera_saved_xp_format">已保存。+%1$d XP</string>
+    <string name="camera_saved_limit">已保存 (已达到每日上限)</string>
+
+    <!-- Chat Screen -->
+    <string name="chat_ask_me">问我点什么...</string>
+    <string name="chat_error">对不起，出错了。请重试。</string>
+    <string name="chat_welcome">你好！我是您的私人 AI 营养师。我可以为您提供饮食建议、分析您的餐食并调整您的计划。今天我能帮您做些什么？</string>
+
+    <!-- Exercise Screen -->
+    <string name="exercise_log_title">运动记录</string>
+    <string name="exercise_choose">选择一项运动</string>
+    <string name="exercise_duration_min">时长 (分钟)</string>
+    <string name="exercise_recent_history">最近记录</string>
+    <string name="exercise_approx_format">约 %1$d 千卡</string>
+    <string name="exercise_saved_format">已保存。%1$d 千卡</string>
+    <string name="exercise_history_item_format">%1$d 分钟。%2$s</string>
+    <string name="ex_walking">散步</string>
+    <string name="ex_running">跑步</string>
+    <string name="ex_cycling">骑行</string>
+    <string name="ex_swimming">游泳</string>
+    <string name="ex_yoga">瑜伽</string>
+    <string name="ex_gym">健身房</string>
+    <string name="ex_dance">跳舞</string>
+    <string name="ex_hiit">高强度间歇训练 (HIIT)</string>
+
+    <!-- Food History -->
+    <string name="food_history_title">饮食记录</string>
+    <string name="food_history_no_data">您还没有记录过餐食</string>
+    <string name="food_history_item_format">%1$d 千卡。P%2$d. C%3$d. F%4$d</string>
+    <string name="food_history_default_item">三文鱼配芦笋</string>
+    <string name="food_history_item_macros_format">%1$d %2$s。P: %3$dg C: %4$dg G: %5$dg</string>
+
+    <!-- Goals Screen -->
+    <string name="goals_title">我的目标</string>
+    <string name="goals_current">当前目标</string>
+    <string name="goals_days_left">剩余 %1$d 天</string>
+    <string name="goals_now">现在</string>
+    <string name="goals_start">开始</string>
+    <string name="goals_set">设定目标</string>
+    <string name="goals_target_weight">目标体重 (公斤)</string>
+    <string name="goals_target_date_hint">目标日期 (YYYY-MM-DD)</string>
+    <string name="goals_save_button">保存目标</string>
+    <string name="goals_weight_format">%1$.1f 公斤</string>
+
+    <!-- Level Screen -->
+    <string name="level_label">等级</string>
+    <string name="level_xp_to_next">还差 %1$d XP 升至下一等级</string>
+    <string name="level_max_reached">已达到最高等级！</string>
+    <string name="level_how_to_earn">如何赚取经验值</string>
+    <string name="level_all_levels">所有等级</string>
+    <string name="level_from_xp">从 %1$d XP 起</string>
+    <string name="level_current_tag">当前</string>
+    <string name="level_beginner">新手</string>
+    <string name="level_apprentice">学徒</string>
+    <string name="level_athlete">运动员</string>
+    <string name="level_expert">专家</string>
+    <string name="level_master">大师</string>
+    <string name="level_xp_action_progress">记录每日进展</string>
+    <string name="level_xp_action_plan">使用 AI 生成计划</string>
+    <string name="level_xp_action_food">识别食物</string>
+    <string name="level_xp_action_chat">与营养师聊天</string>
+    <string name="level_xp_action_mood">记录心情</string>
+
+    <!-- Mood Screen -->
+    <string name="mood_how_are_you">你今天感觉怎么样？</string>
+    <string name="mood_affects_nutrition">您的心情会影响您的营养摄入</string>
+    <string name="mood_get_recommendation">获取个性化建议</string>
+    <string name="mood_daily_tip">每日小贴士</string>
+    <string name="mood_understood">明白了，开始吧！</string>
+    <string name="mood_great_label">非常好</string>
+    <string name="mood_great_desc">我感到精力充沛且充满动力</string>
+    <string name="mood_good_label">好</string>
+    <string name="mood_good_desc">我感到平静且积极</string>
+    <string name="mood_normal_label">一般</string>
+    <string name="mood_normal_desc">既不好也不坏，平常的一天</string>
+    <string name="mood_sad_label">难过</string>
+    <string name="mood_sad_desc">我感到情绪低落</string>
+    <string name="mood_stressed_label">压力大</string>
+    <string name="mood_stressed_desc">我感到了巨大的压力和焦虑</string>
+    <string name="mood_tired_label">疲倦</string>
+    <string name="mood_tired_desc">我感到疲惫且没有精力</string>
+    <string name="mood_irritable_label">易怒</string>
+    <string name="mood_irritable_desc">我感到心情很糟糕</string>
+    <string name="mood_unwell_label">不舒服</string>
+    <string name="mood_unwell_desc">我感到生病或身体不适</string>
+
+    <!-- Plan Adjust Screen -->
+    <string name="plan_adjust_title">智能计划调整</string>
+    <string name="plan_adjust_subtitle">AI 分析您的真实进展并调整计划</string>
+    <string name="plan_adjust_recent">您最近的进展</string>
+    <string name="plan_adjust_stat_start">初始体重</string>
+    <string name="plan_adjust_stat_current">当前体重</string>
+    <string name="plan_adjust_stat_change">变化</string>
+    <string name="plan_adjust_avg_calories">平均卡路里: %1$d 千卡/天</string>
+    <string name="plan_adjust_goal_label">目标: %1$s</string>
+    <string name="plan_adjust_analyzing">正在分析您的进展...</string>
+    <string name="plan_adjust_analyze_button">分析并调整我的计划</string>
+    <string name="plan_adjust_analysis_label">您的进展分析</string>
+    <string name="plan_adjust_diet_label">新饮食计划</string>
+    <string name="plan_adjust_exercise_label">新运动计划</string>
+    <string name="plan_adjust_save_button">保存新计划</string>
+    <string name="plan_adjust_no_data">您还没有进展数据</string>
+    <string name="plan_adjust_no_data_desc">请在“我的进展”中记录至少几天的数据，以便 AI 调整您的计划</string>
+
+    <!-- Plan Screen -->
+    <string name="plan_summary_format">%1$d 岁。%2$.1f公斤。%3$.1f厘米。BMI %4$s</string>
+    <string name="plan_generating">正在分析您的个人资料并生成个性化计划...</string>
+    <string name="plan_back_home">返回首页</string>
+    <string name="plan_current_title">您当前的计划</string>
+    <string name="plan_diet_title">饮食计划</string>
+    <string name="plan_exercise_title">运动计划</string>
+
+    <!-- Achievements keys -->
+    <string name="ach_first_plan_t">首个计划</string>
+    <string name="ach_first_plan_d">使用 AI 生成您的第一个计划</string>
+    <string name="ach_first_food_t">首次扫描</string>
+    <string name="ach_first_food_d">识别您的第一种食物</string>
+    <string name="ach_first_chat_t">首次咨询</string>
+    <string name="ach_first_chat_d">与 AI 营养师交谈</string>
+    <string name="ach_first_mood_t">首次心情记录</string>
+    <string name="ach_first_mood_d">记录您的感受</string>
+    <string name="ach_first_water_t">补水</string>
+    <string name="ach_first_water_d">记录您的第一杯水</string>
+    <string name="ach_first_exercise_t">首次运动</string>
+    <string name="ach_first_exercise_d">记录一次运动</string>
+    <string name="ach_streak3_t">3天连击</string>
+    <string name="ach_streak3_d">连续 3 天活跃</string>
+    <string name="ach_streak7_t">7天连击</string>
+    <string name="ach_streak7_d">整整一周没有中断</string>
+    <string name="ach_streak30_t">30天连击</string>
+    <string name="ach_streak30_d">连续 30 天，势不可挡</string>
+    <string name="ach_water_goal_t">饮水目标</string>
+    <string name="ach_water_goal_d">达成每日饮水目标</string>
+    <string name="ach_food10_t">10餐记录</string>
+    <string name="ach_food10_d">扫描 10 种食物</string>
+    <string name="ach_food50_t">50餐记录</string>
+    <string name="ach_food50_d">扫描 50 种食物</string>
+    <string name="ach_level3_t">运动员</string>
+    <string name="ach_level3_d">达到等级 3</string>
+    <string name="ach_level5_t">大师</string>
+    <string name="ach_level5_d">达到最高等级</string>
+    <string name="ach_goal_t">目标达成</string>
+    <string name="ach_goal_d">达到您的目标体重</string>
+</resources>

@@ -1,8 +1,8 @@
 package com.vitaai.app
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -27,16 +27,18 @@ import com.vitaai.app.ui.theme.Gold
 import com.vitaai.app.utils.*
 
 @OptIn(ExperimentalMaterial3Api::class)
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
-        LanguageManager.loadSavedLanguage(this)
+        super.onCreate(savedInstanceState)
+        
+        // Cargamos configuraciones después de super.onCreate para evitar errores de inicialización
         ThemeManager.load(this)
         NotificationScheduler.ensureChannel(this)
-        super.onCreate(savedInstanceState)
+        
         setContent {
             VitaAITheme {
-                val currentLang by LanguageManager.currentLanguage
                 val context = LocalContext.current
 
                 val startDestination = remember {
@@ -75,26 +77,22 @@ class MainActivity : ComponentActivity() {
                         
                         LaunchedEffect(uid) {
                             if (uid != null && !checkedMood) {
-                                // 1. Comprobar cache local (rápido)
                                 if (MoodManager.isMoodSetToday(context)) {
                                     checkedMood = true
                                     return@LaunchedEffect
                                 }
 
-                                // 2. Sincronización con Firestore (si no hay cache local)
                                 val today = DateUtils.todayKey()
                                 db.collection("users").document(uid)
                                     .collection("moods").document(today)
                                     .get()
                                     .addOnSuccessListener { doc ->
                                         if (doc.exists()) {
-                                            // Sincronizamos los datos al cache local
                                             val label = doc.getString("mood") ?: ""
                                             val emoji = doc.getString("emoji") ?: ""
                                             val rec = doc.getString("recommendation") ?: ""
                                             MoodManager.saveMoodLocally(context, label, emoji, rec)
                                         } else {
-                                            // Solo si no existe en ningún lado, vamos a preguntar
                                             navController.navigate("mood")
                                         }
                                         checkedMood = true
@@ -330,18 +328,17 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun topBarWithBack(navController: NavController, title: String) {
-    TopAppBar(
-        title = { Text(title, color = Color.White) },
-        navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Gold)
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = NavyBlue)
-    )
+    @Composable
+    private fun topBarWithBack(navController: NavController, title: String) {
+        TopAppBar(
+            title = { Text(title, color = Color.White) },
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Gold)
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = NavyBlue)
+        )
+    }
 }

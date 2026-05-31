@@ -37,6 +37,7 @@ android {
 dependencies {
     // Core
     implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1") // AÑADIDO PARA EL CAMBIO DE IDIOMA
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
     
@@ -91,4 +92,7 @@ dependencies {
 
     // Coroutines + Firebase
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // ML Kit Translation
+    implementation("com.google.mlkit:translate:17.0.2")
 }
