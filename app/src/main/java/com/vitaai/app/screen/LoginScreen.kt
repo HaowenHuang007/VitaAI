@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,8 +40,6 @@ import com.vitaai.app.ui.theme.NavyBlue
 private const val COLLECTION_USERS = "users"
 private const val FIELD_USERNAME = "username"
 private const val FIELD_EMAIL = "email"
-private const val FIELD_SECURITY_QUESTION = "securityQuestion"
-private const val FIELD_SECURITY_ANSWER = "securityAnswer"
 private const val GOOGLE_FAVICON_URL = "https://www.google.com/favicon.ico"
 
 @Composable
@@ -55,12 +55,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
     var isGoogleLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
 
-    var showForgotStep1 by remember { mutableStateOf(false) }
-    var showForgotStep2 by remember { mutableStateOf(false) }
+    // State for recovery dialog
+    var showForgotDialog by remember { mutableStateOf(false) }
     var forgotEmail by remember { mutableStateOf("") }
-    var securityQuestion by remember { mutableStateOf("") }
-    var securityAnswer by remember { mutableStateOf("") }
-    var correctAnswer by remember { mutableStateOf("") }
     var forgotMsg by remember { mutableStateOf("") }
     var isForgotLoading by remember { mutableStateOf(false) }
     var isEmailSentSuccess by remember { mutableStateOf(false) }
@@ -95,9 +92,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                                     FIELD_USERNAME to (account.displayName ?: ""),
                                     FIELD_EMAIL to (account.email ?: "")
                                 ))
-                                .addOnSuccessListener { 
+                                .addOnSuccessListener {
                                     isGoogleLoading = false
-                                    onLoginSuccess() 
+                                    onLoginSuccess()
                                 }
                                 .addOnFailureListener {
                                     errorMsg = context.getString(R.string.login_error_create_profile, it.message ?: "")
@@ -119,10 +116,18 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
         }
     }
 
-    if (showForgotStep1) {
+    // Professional Recovery Dialog
+    if (showForgotDialog) {
         AlertDialog(
-            onDismissRequest = { showForgotStep1 = false; forgotMsg = ""; forgotEmail = "" },
-            title = { 
+            onDismissRequest = {
+                if (!isForgotLoading) {
+                    showForgotDialog = false
+                    forgotMsg = ""
+                    forgotEmail = ""
+                    isEmailSentSuccess = false
+                }
+            },
+            title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(imageVector = IconList.Lock, contentDescription = null, tint = NavyBlue, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(8.dp))
@@ -131,134 +136,74 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
             },
             text = {
                 Column {
-                    Text(stringResource(R.string.login_forgot_password_desc),
-                        fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = forgotEmail, onValueChange = { forgotEmail = it },
-                        label = { Text(stringResource(R.string.common_email)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NavyBlue, focusedLabelColor = NavyBlue)
-                    )
-                    if (forgotMsg.isNotEmpty()) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(forgotMsg, fontSize = 13.sp, color = MaterialTheme.colorScheme.error)
+                    if (isEmailSentSuccess) {
+                        Text(
+                            text = stringResource(R.string.login_email_sent_success, forgotEmail),
+                            fontSize = 14.sp,
+                            color = NavyBlue
+                        )
+                    } else {
+                        Text(stringResource(R.string.login_forgot_password_desc),
+                            fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = forgotEmail, onValueChange = { forgotEmail = it },
+                            label = { Text(stringResource(R.string.common_email)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp), singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = NavyBlue, focusedLabelColor = NavyBlue)
+                        )
+                        if (forgotMsg.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(forgotMsg, fontSize = 13.sp, color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        isForgotLoading = true
-                        forgotMsg = ""
-                        db.collection(COLLECTION_USERS)
-                            .whereEqualTo(FIELD_EMAIL, forgotEmail)
-                            .get()
-                            .addOnSuccessListener { snap ->
-                                if (snap.isEmpty) {
-                                    forgotMsg = context.getString(R.string.login_error_no_account)
-                                    isForgotLoading = false
-                                } else {
-                                    val doc = snap.documents.first()
-                                    securityQuestion = doc.getString(FIELD_SECURITY_QUESTION) ?: ""
-                                    correctAnswer = doc.getString(FIELD_SECURITY_ANSWER) ?: ""
-                                    isForgotLoading = false
-                                    showForgotStep1 = false
-                                    showForgotStep2 = true
-                                }
-                            }
-                            .addOnFailureListener {
-                                forgotMsg = context.getString(R.string.login_error_search_account)
-                                isForgotLoading = false
-                            }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = NavyBlue),
-                    enabled = !isForgotLoading && forgotEmail.isNotEmpty()
-                ) {
-                    if (isForgotLoading) CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp
-                    )
-                    else Text(stringResource(R.string.common_next), color = Color.White)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showForgotStep1 = false; forgotMsg = "" }) {
-                    Text(stringResource(R.string.common_cancel))
-                }
-            }
-        )
-    }
-
-    if (showForgotStep2) {
-        AlertDialog(
-            onDismissRequest = { 
-                showForgotStep2 = false
-                securityAnswer = ""
-                forgotMsg = ""
-                isEmailSentSuccess = false
-            },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = IconList.Info, contentDescription = null, tint = DeepBlue, modifier = Modifier.size(24.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.login_security_question_title), fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                Column {
-                    Text(securityQuestion, fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold, color = DeepBlue)
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = securityAnswer, onValueChange = { securityAnswer = it },
-                        label = { Text(stringResource(R.string.login_security_answer_label)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NavyBlue, focusedLabelColor = NavyBlue)
-                    )
-                    if (forgotMsg.isNotEmpty()) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(forgotMsg, fontSize = 13.sp,
-                            color = if (isEmailSentSuccess) NavyBlue
-                            else MaterialTheme.colorScheme.error)
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (securityAnswer.lowercase().trim() == correctAnswer) {
+                        if (isEmailSentSuccess) {
+                            showForgotDialog = false
+                            isEmailSentSuccess = false
+                            forgotEmail = ""
+                        } else {
+                            isForgotLoading = true
+                            forgotMsg = ""
+                            // Direct email sending via Firebase
                             auth.sendPasswordResetEmail(forgotEmail)
-                                .addOnSuccessListener { 
-                                    forgotMsg = context.getString(R.string.login_email_sent_success, forgotEmail)
+                                .addOnSuccessListener {
+                                    isForgotLoading = false
                                     isEmailSentSuccess = true
                                 }
-                                .addOnFailureListener { 
+                                .addOnFailureListener {
+                                    isForgotLoading = false
                                     forgotMsg = context.getString(R.string.login_error_send_email)
-                                    isEmailSentSuccess = false
                                 }
-                        } else {
-                            forgotMsg = context.getString(R.string.login_error_wrong_answer)
-                            isEmailSentSuccess = false
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = NavyBlue),
-                    enabled = securityAnswer.isNotEmpty() && !isEmailSentSuccess
+                    enabled = !isForgotLoading && (forgotEmail.isNotEmpty() || isEmailSentSuccess)
                 ) {
-                    Text(stringResource(R.string.common_verify), color = Color.White)
+                    if (isForgotLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp
+                        )
+                    } else {
+                        if (isEmailSentSuccess) {
+                            Text(stringResource(R.string.common_close), color = Color.White)
+                        } else {
+                            Text(stringResource(R.string.common_send), color = Color.White)
+                        }
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    showForgotStep2 = false
-                    securityAnswer = ""
-                    forgotMsg = ""
-                    isEmailSentSuccess = false
-                }) {
-                    Text(if (isEmailSentSuccess) stringResource(R.string.common_close) else stringResource(R.string.common_cancel))
+                if (!isEmailSentSuccess) {
+                    TextButton(onClick = { showForgotDialog = false; forgotMsg = "" }) {
+                        Text(stringResource(R.string.common_cancel))
+                    }
                 }
             }
         )
@@ -285,7 +230,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                     .clip(RoundedCornerShape(24.dp))
                     .background(Gold.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
-            ) { 
+            ) {
                 Icon(
                     imageVector = IconList.Logo,
                     contentDescription = null,
@@ -376,7 +321,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                         TextButton(onClick = {
                             forgotEmail = email
                             forgotMsg = ""
-                            showForgotStep1 = true
+                            showForgotDialog = true
                         }) {
                             Text(stringResource(R.string.login_forgot_password_link), fontSize = 12.sp, color = NavyBlue)
                         }
@@ -388,6 +333,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                     }
 
                     Spacer(Modifier.height(8.dp))
+                    // Main Login Button
                     Button(
                         onClick = {
                             isLoading = true
@@ -405,10 +351,13 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                                 && email.isNotEmpty() && password.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(containerColor = NavyBlue)
                     ) {
-                        if (isLoading) CircularProgressIndicator(
-                            modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp
-                        )
-                        else Text(stringResource(R.string.login_title), fontSize = 16.sp, color = Color.White)
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(stringResource(R.string.login_title), fontSize = 16.sp, color = Color.White)
+                        }
                     }
                 }
             }
