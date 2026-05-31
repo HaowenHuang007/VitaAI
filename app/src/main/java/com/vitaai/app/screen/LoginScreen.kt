@@ -45,14 +45,11 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
     var isGoogleLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
 
-    var showForgotStep1 by remember { mutableStateOf(false) }
-    var showForgotStep2 by remember { mutableStateOf(false) }
+    var showForgotDialog by remember { mutableStateOf(false) }
     var forgotEmail by remember { mutableStateOf("") }
-    var securityQuestion by remember { mutableStateOf("") }
-    var securityAnswer by remember { mutableStateOf("") }
-    var correctAnswer by remember { mutableStateOf("") }
     var forgotMsg by remember { mutableStateOf("") }
     var isForgotLoading by remember { mutableStateOf(false) }
+    var isEmailSentSuccess by remember { mutableStateOf(false) }
 
     val googleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -98,119 +95,79 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
         }
     }
 
-    if (showForgotStep1) {
+    if (showForgotDialog) {
         AlertDialog(
-            onDismissRequest = { showForgotStep1 = false; forgotMsg = ""; forgotEmail = "" },
+            onDismissRequest = {
+                if (!isForgotLoading) {
+                    showForgotDialog = false
+                    forgotMsg = ""
+                    forgotEmail = ""
+                    isEmailSentSuccess = false
+                }
+            },
             title = { Text("Recuperar contraseña", fontWeight = FontWeight.Bold) },
             text = {
                 Column {
-                    Text("Introduce tu email registrado",
-                        fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = forgotEmail, onValueChange = { forgotEmail = it },
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NavyBlue, focusedLabelColor = NavyBlue)
-                    )
-                    if (forgotMsg.isNotEmpty()) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(forgotMsg, fontSize = 13.sp, color = MaterialTheme.colorScheme.error)
+                    if (isEmailSentSuccess) {
+                        Text("✅ Email enviado a $forgotEmail",
+                            fontSize = 14.sp, color = NavyBlue)
+                    } else {
+                        Text("Introduce tu email registrado",
+                            fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = forgotEmail, onValueChange = { forgotEmail = it },
+                            label = { Text("Email") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp), singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = NavyBlue, focusedLabelColor = NavyBlue)
+                        )
+                        if (forgotMsg.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(forgotMsg, fontSize = 13.sp, color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        isForgotLoading = true
-                        forgotMsg = ""
-                        db.collection("users")
-                            .whereEqualTo("email", forgotEmail)
-                            .get()
-                            .addOnSuccessListener { snap ->
-                                if (snap.isEmpty) {
-                                    forgotMsg = "❌ No existe cuenta con ese email"
-                                    isForgotLoading = false
-                                } else {
-                                    val doc = snap.documents.first()
-                                    securityQuestion = doc.getString("securityQuestion") ?: ""
-                                    correctAnswer = doc.getString("securityAnswer") ?: ""
-                                    isForgotLoading = false
-                                    showForgotStep1 = false
-                                    showForgotStep2 = true
-                                }
-                            }
-                            .addOnFailureListener {
-                                forgotMsg = "❌ Error al buscar cuenta"
-                                isForgotLoading = false
-                            }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = NavyBlue),
-                    enabled = !isForgotLoading && forgotEmail.isNotEmpty()
-                ) {
-                    if (isForgotLoading) CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp
-                    )
-                    else Text("Siguiente", color = Color.White)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showForgotStep1 = false; forgotMsg = "" }) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
-
-    if (showForgotStep2) {
-        AlertDialog(
-            onDismissRequest = { showForgotStep2 = false; securityAnswer = ""; forgotMsg = "" },
-            title = { Text("Pregunta de seguridad", fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    Text(securityQuestion, fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold, color = DeepBlue)
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = securityAnswer, onValueChange = { securityAnswer = it },
-                        label = { Text("Tu respuesta") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NavyBlue, focusedLabelColor = NavyBlue)
-                    )
-                    if (forgotMsg.isNotEmpty()) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(forgotMsg, fontSize = 13.sp,
-                            color = if (forgotMsg.startsWith("✅")) NavyBlue
-                            else MaterialTheme.colorScheme.error)
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (securityAnswer.lowercase().trim() == correctAnswer) {
-                            auth.sendPasswordResetEmail(forgotEmail)
-                                .addOnSuccessListener { forgotMsg = "✅ Email enviado a $forgotEmail" }
-                                .addOnFailureListener { forgotMsg = "❌ Error al enviar email" }
+                        if (isEmailSentSuccess) {
+                            showForgotDialog = false
+                            isEmailSentSuccess = false
+                            forgotEmail = ""
                         } else {
-                            forgotMsg = "❌ Respuesta incorrecta"
+                            isForgotLoading = true
+                            forgotMsg = ""
+                            auth.sendPasswordResetEmail(forgotEmail)
+                                .addOnSuccessListener {
+                                    isForgotLoading = false
+                                    isEmailSentSuccess = true
+                                }
+                                .addOnFailureListener {
+                                    isForgotLoading = false
+                                    forgotMsg = "❌ Error al enviar email"
+                                }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = NavyBlue),
-                    enabled = securityAnswer.isNotEmpty() && !forgotMsg.startsWith("✅")
+                    enabled = !isForgotLoading && (forgotEmail.isNotEmpty() || isEmailSentSuccess)
                 ) {
-                    Text("Verificar", color = Color.White)
+                    if (isForgotLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(if (isEmailSentSuccess) "Cerrar" else "Enviar", color = Color.White)
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    showForgotStep2 = false; securityAnswer = ""; forgotMsg = ""
-                }) {
-                    Text(if (forgotMsg.startsWith("✅")) "Cerrar" else "Cancelar")
+                if (!isEmailSentSuccess) {
+                    TextButton(onClick = { showForgotDialog = false; forgotMsg = "" }) {
+                        Text("Cancelar")
+                    }
                 }
             }
         )
@@ -324,7 +281,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onGoRegister: () -> Unit) {
                         TextButton(onClick = {
                             forgotEmail = email
                             forgotMsg = ""
-                            showForgotStep1 = true
+                            isEmailSentSuccess = false
+                            showForgotDialog = true
                         }) {
                             Text("¿Olvidaste tu contraseña?", fontSize = 12.sp, color = NavyBlue)
                         }
