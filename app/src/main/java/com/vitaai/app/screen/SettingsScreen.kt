@@ -89,9 +89,6 @@ fun SettingsScreen(
                             )
                             .clickable {
                                 LanguageManager.setLanguage(context, code)
-                                val intent = (context as android.app.Activity).intent
-                                context.finish()
-                                context.startActivity(intent)
                             }
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
