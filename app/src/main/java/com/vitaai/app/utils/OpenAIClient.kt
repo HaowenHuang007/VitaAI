@@ -1,11 +1,9 @@
 package com.vitaai.app.utils
 
 /**
- * AI client: calls a Cloudflare Worker that proxies Google Gemini API.
+ * AI client: calls a Cloudflare Worker that proxies the OpenAI API.
  *
- * Function names still say "OpenAI" only to keep call sites unchanged across
- * the 7 screens that import them. Under the hood the worker now talks to
- * Gemini 2.0 Flash. See /cloudflare-worker/worker.js for the proxy.
+ * The worker talks to OpenAI (gpt-4o-mini). See /cloudflare-worker/worker.js.
  *
  * Why a proxy? So the API key never ships inside the APK.
  * Auth: every call carries the current Firebase user's ID token.

@@ -1,8 +1,8 @@
 /**
- * VitaAI Cloudflare Worker — Gemini API proxy
+ * VitaAI Cloudflare Worker — OpenAI API proxy
  *
- * Deployed on the Cloudflare Workers free tier (100k req/day).
- * The Gemini API key lives in Worker Secrets, not in the APK.
+ * Deployed on the Cloudflare Workers free tier.
+ * The OpenAI key lives in Worker Secrets (env.OPENAI_API_KEY), not in the APK.
  *
  * Three endpoints:
  *   POST /chat                  -> single-turn JSON answer
@@ -15,9 +15,8 @@
  * upgrade later by verifying signatures against Google's public keys.
  */
 
-const GEMINI_MODEL = "gemini-2.0-flash";
-const GEMINI_URL = (model) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+const OPENAI_MODEL = "gpt-4o-mini";
+const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -57,27 +56,32 @@ function checkAuth(request, expectedProjectId) {
   }
 }
 
-async function callGemini(env, contents, systemInstruction, generationConfig) {
+// messages: OpenAI chat messages array. opts: { temperature, maxTokens, jsonMode }
+async function callOpenAI(env, messages, opts = {}) {
+  const { temperature = 0.7, maxTokens = 1500, jsonMode = false } = opts;
   const body = {
-    contents,
-    generationConfig: generationConfig || { temperature: 0.7, maxOutputTokens: 1500 },
+    model: OPENAI_MODEL,
+    messages,
+    temperature,
+    max_tokens: maxTokens,
   };
-  if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction }] };
-  }
+  if (jsonMode) body.response_format = { type: "json_object" };
 
-  const res = await fetch(`${GEMINI_URL(GEMINI_MODEL)}?key=${env.GEMINI_API_KEY}`, {
+  const res = await fetch(OPENAI_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+    },
     body: JSON.stringify(body),
   });
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Gemini ${res.status}: ${text.slice(0, 300)}`);
+    throw new Error(`OpenAI ${res.status}: ${text.slice(0, 300)}`);
   }
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  return data.choices?.[0]?.message?.content ?? "";
 }
 
 async function handleChat(request, env) {
@@ -87,11 +91,17 @@ async function handleChat(request, env) {
   }
   if (prompt.length > 4000) return err(400, "prompt too long");
 
-  const content = await callGemini(
+  const content = await callOpenAI(
     env,
-    [{ role: "user", parts: [{ text: prompt }] }],
-    "You are an expert nutritionist. Always respond in valid JSON. Values must be plain text, never nested JSON.",
-    { temperature: 0.7, maxOutputTokens: 1500, responseMimeType: "application/json" }
+    [
+      {
+        role: "system",
+        content:
+          "You are an expert nutritionist. Always respond in valid JSON. Values must be plain text, never nested JSON.",
+      },
+      { role: "user", content: prompt },
+    ],
+    { temperature: 0.7, maxTokens: 1500, jsonMode: true }
   );
   return json({ content });
 }
@@ -104,19 +114,18 @@ async function handleChatWithHistory(request, env) {
   if (!Array.isArray(history)) return err(400, "history must be an array");
   if (history.length > 30) return err(400, "history too long");
 
-  // Gemini uses role "user" / "model" (not "assistant").
-  const contents = [];
+  const messages = [{ role: "system", content: systemPrompt }];
   for (const msg of history) {
     if (!msg || typeof msg !== "object") continue;
-    const role = msg.role === "assistant" ? "model" : "user";
+    const role = msg.role === "assistant" ? "assistant" : "user";
     const text = String(msg.content || "").slice(0, 4000);
-    if (text) contents.push({ role, parts: [{ text }] });
+    if (text) messages.push({ role, content: text });
   }
-  if (contents.length === 0) return err(400, "history is empty");
+  if (messages.length === 1) return err(400, "history is empty");
 
-  const content = await callGemini(env, contents, systemPrompt, {
+  const content = await callOpenAI(env, messages, {
     temperature: 0.7,
-    maxOutputTokens: 500,
+    maxTokens: 500,
   });
   return json({ content });
 }
@@ -130,8 +139,8 @@ async function handleAnalyzeImage(request, env) {
 
   const lang = language || "Spanish";
   const userPrompt =
-    'Analyze the food in this image. Return strict JSON with these keys:\n' +
-    '{\n' +
+    "Analyze the food in this image. Return strict JSON with these keys:\n" +
+    "{\n" +
     '  "name": "food name",\n' +
     '  "calories": integer (kcal for the visible portion),\n' +
     '  "protein": integer (grams),\n' +
@@ -139,25 +148,31 @@ async function handleAnalyzeImage(request, env) {
     '  "fat": integer (grams),\n' +
     '  "rating": one of "healthy"|"moderate"|"avoid",\n' +
     '  "tip": "one brief nutritional tip"\n' +
-    '}\n' +
-    'If unsure, give your best estimate. No text outside the JSON.';
+    "}\n" +
+    "If unsure, give your best estimate. No text outside the JSON.";
 
-  const contents = [
+  const messages = [
+    {
+      role: "system",
+      content: `You are an expert nutritionist. Always respond in valid JSON only, no markdown fences. All textual fields must be in ${lang}.`,
+    },
     {
       role: "user",
-      parts: [
-        { text: userPrompt },
-        { inlineData: { mimeType: "image/jpeg", data: base64Image } },
+      content: [
+        { type: "text", text: userPrompt },
+        {
+          type: "image_url",
+          image_url: { url: `data:image/jpeg;base64,${base64Image}` },
+        },
       ],
     },
   ];
 
-  const content = await callGemini(
-    env,
-    contents,
-    `You are an expert nutritionist. Always respond in valid JSON only, no markdown fences. All textual fields must be in ${lang}.`,
-    { temperature: 0.4, maxOutputTokens: 400, responseMimeType: "application/json" }
-  );
+  const content = await callOpenAI(env, messages, {
+    temperature: 0.4,
+    maxTokens: 400,
+    jsonMode: true,
+  });
   return json({ content });
 }
 
@@ -169,8 +184,8 @@ export default {
     if (request.method !== "POST") {
       return err(405, "Method not allowed");
     }
-    if (!env.GEMINI_API_KEY) {
-      return err(500, "Server misconfigured: GEMINI_API_KEY missing");
+    if (!env.OPENAI_API_KEY) {
+      return err(500, "Server misconfigured: OPENAI_API_KEY missing");
     }
     if (!env.FIREBASE_PROJECT_ID) {
       return err(500, "Server misconfigured: FIREBASE_PROJECT_ID missing");
